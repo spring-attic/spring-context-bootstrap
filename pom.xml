@@ -17,6 +17,10 @@
 		<spring-javaformat.version>0.0.17</spring-javaformat.version>
 	</properties>
 
+	<modules>
+		<module>spring-context-bootstrap-generator</module>
+	</modules>
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -116,6 +120,11 @@
 				<version>${spring-boot.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.squareup</groupId>
+				<artifactId>javapoet</artifactId>
+				<version>1.11.1</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
