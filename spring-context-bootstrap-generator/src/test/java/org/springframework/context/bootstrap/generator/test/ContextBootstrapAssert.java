@@ -24,7 +24,6 @@ import java.nio.file.Path;
 
 import org.assertj.core.api.AbstractPathAssert;
 import org.assertj.core.api.PathAssert;
-import org.assertj.core.api.StringAssert;
 
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
@@ -50,12 +49,12 @@ public class ContextBootstrapAssert extends AbstractPathAssert<ContextBootstrapA
 		return this.myself;
 	}
 
-	public StringAssert contextBootstrap() {
+	public TextAssert contextBootstrap() {
 		return source(this.packageName, "ContextBootstrap");
 	}
 
-	public StringAssert source(String packageName, String name) {
-		return new StringAssert(readContent(validateAndGetAsset(this.actual, packageName, name)));
+	public TextAssert source(String packageName, String name) {
+		return new TextAssert(readContent(validateAndGetAsset(this.actual, packageName, name)));
 	}
 
 	private Path validateAndGetAsset(Path baseDir, String packageName, String name) {

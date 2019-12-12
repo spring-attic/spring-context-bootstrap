@@ -26,6 +26,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapGeneratorTester;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapStructure;
+import org.springframework.context.support.GenericApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,7 +47,15 @@ class ContextBootstrapGeneratorTests {
 	}
 
 	@Test
-	void generateBootstrapClassWithBeanMethodAndNoParameter() {
+	void bootstrapClassGeneratesStructure() {
+		ContextBootstrapStructure structure = this.generatorTester.generate(this.contextRunner);
+		assertThat(structure).contextBootstrap().lines().containsSubsequence("public class ContextBootstrap {",
+				"  public void bootstrap(GenericApplicationContext context) {", "  }", "}");
+		assertThat(structure).contextBootstrap().contains("import " + GenericApplicationContext.class.getName() + ";");
+	}
+
+	@Test
+	void bootstrapClassWithBeanMethodAndNoParameter() {
 		ContextBootstrapStructure structure = this.generatorTester
 				.generate(this.contextRunner.withUserConfiguration(SimpleConfiguration.class));
 		assertThat(structure).contextBootstrap().contains(
