@@ -1,3 +1,6 @@
+# Prevent auto-generated class to be added
+spring-context-bootstrap-samples/spring-context-bootstrap-sample-generator/src/main/java/sample/generator/ContextBootstrap.java
+
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar

@@ -34,7 +34,7 @@ public class SimpleApplication {
 		ConfigurableApplicationContext context = SpringApplication.run(SimpleApplication.class, args);
 
 		JavaFile javaFile = new ContextBootstrapGenerator(context.getBeanFactory())
-				.generateBootstrapClass("sample.generator.bootstrap");
+				.generateBootstrapClass("sample.generator");
 		// In IntelliJ IDEA, make sure that "working directory" is set to $MODULE_DIR$
 		Path srcDirectory = FileSystems.getDefault().getPath(".").resolve("src/main/java");
 		javaFile.writeTo(srcDirectory);
