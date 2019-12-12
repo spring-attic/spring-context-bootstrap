@@ -25,6 +25,7 @@ import java.util.function.Function;
 import javax.lang.model.element.Modifier;
 
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.CodeBlock.Builder;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -86,29 +87,39 @@ public class ContextBootstrapGenerator {
 		}
 		// Remove CGLIB classes
 		Class<?> type = ClassUtils.getUserClass(beanDefinition.getResolvableType().getRawClass());
+		CodeBlock.Builder code = CodeBlock.builder();
+		code.add("context.registerBean($T.class, ", type);
+		boolean handled = handleBeanValueSupplier(code, beanDefinition, type);
+		code.add(")"); // End of registerBean
+		if (handled) {
+			method.addStatement(code.build());
+		}
+	}
+
+	private boolean handleBeanValueSupplier(Builder code, BeanDefinition beanDefinition, Class<?> type) {
 		if (beanDefinition instanceof RootBeanDefinition) {
 			Field field = ReflectionUtils.findField(RootBeanDefinition.class, "resolvedConstructorOrFactoryMethod");
 			ReflectionUtils.makeAccessible(field);
 			Object factoryExecutable = ReflectionUtils.getField(field, beanDefinition);
 			if (factoryExecutable instanceof Method) {
-				method.addStatement(handleBeanFactoryMethod((Method) factoryExecutable, type));
+				handleBeanFactoryMethodSupplier(code, (Method) factoryExecutable);
 			}
 			else if (factoryExecutable instanceof Constructor) {
-				method.addStatement(handleBeanConstructor((Constructor<?>) factoryExecutable, type));
+				handleBeanConstructorSupplier(code, (Constructor<?>) factoryExecutable, type);
 			}
 			// TODO: handle FactoryBean
 			else {
 				logger.error("Failed to handle bean with definition " + beanDefinition);
+				return false;
 			}
 		}
 		else {
-			method.addStatement("context.registerBean($T.class, $T::new)", type, type);
+			code.add("$T::new)", type);
 		}
+		return true;
 	}
 
-	public CodeBlock handleBeanFactoryMethod(Method factoryMethod, Class<?> type) {
-		CodeBlock.Builder code = CodeBlock.builder();
-		code.add("context.registerBean($T.class, ", type);
+	private void handleBeanFactoryMethodSupplier(CodeBlock.Builder code, Method factoryMethod) {
 		code.add("() -> ");
 		if (java.lang.reflect.Modifier.isStatic(factoryMethod.getModifiers())) {
 			code.add("$T", factoryMethod.getDeclaringClass());
@@ -119,14 +130,10 @@ public class ContextBootstrapGenerator {
 		code.add(".$L(", factoryMethod.getName());
 		handleParameters(code, factoryMethod.getParameters(),
 				(i) -> ResolvableType.forMethodParameter(factoryMethod, i));
-		code.add(")"); // End of method call
-		code.add(")"); // End of registerBean
-		return code.build();
+		code.add(")");
 	}
 
-	public CodeBlock handleBeanConstructor(Constructor<?> constructor, Class<?> type) {
-		CodeBlock.Builder code = CodeBlock.builder();
-		code.add("context.registerBean($T.class, ", type);
+	private void handleBeanConstructorSupplier(CodeBlock.Builder code, Constructor<?> constructor, Class<?> type) {
 		Parameter[] parameters = constructor.getParameters();
 		if (parameters.length == 0) {
 			code.add("$T::new", type);
@@ -136,8 +143,6 @@ public class ContextBootstrapGenerator {
 			handleParameters(code, parameters, (i) -> ResolvableType.forConstructorParameter(constructor, i));
 			code.add(")"); // End of constructor
 		}
-		code.add(")"); // End of registerBean
-		return code.build();
 	}
 
 	private void handleParameters(CodeBlock.Builder code, Parameter[] parameters,
@@ -168,15 +173,6 @@ public class ContextBootstrapGenerator {
 		else {
 			code.add("context.getBean($T.class)", resolvedClass);
 		}
-	}
-
-	public static class TestBootstrap {
-
-		public void bootstrap(GenericApplicationContext context) {
-			context.registerBean(TestBootstrap.class, TestBootstrap::new);
-
-		}
-
 	}
 
 }
