@@ -76,19 +76,19 @@ public class ContextBootstrapGenerator {
 				.addParameter(GenericApplicationContext.class, "context");
 		String[] beanNames = this.beanFactory.getBeanDefinitionNames();
 		for (String beanName : beanNames) {
-			handleBeanDefinition(method, this.beanFactory.getMergedBeanDefinition(beanName));
+			handleBeanDefinition(method, beanName, this.beanFactory.getMergedBeanDefinition(beanName));
 		}
 		return method.build();
 	}
 
-	public void handleBeanDefinition(MethodSpec.Builder method, BeanDefinition beanDefinition) {
+	private void handleBeanDefinition(MethodSpec.Builder method, String beanName, BeanDefinition beanDefinition) {
 		if (!this.selector.select(beanDefinition)) {
 			return;
 		}
 		// Remove CGLIB classes
 		Class<?> type = ClassUtils.getUserClass(beanDefinition.getResolvableType().getRawClass());
 		CodeBlock.Builder code = CodeBlock.builder();
-		code.add("context.registerBean($T.class, ", type);
+		code.add("context.registerBean($S, $T.class, ", beanName, type);
 		boolean handled = handleBeanValueSupplier(code, beanDefinition, type);
 		code.add(")"); // End of registerBean
 		if (handled) {

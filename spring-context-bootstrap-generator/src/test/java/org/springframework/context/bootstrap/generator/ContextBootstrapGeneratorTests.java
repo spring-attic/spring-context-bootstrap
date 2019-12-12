@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapGeneratorTester;
@@ -59,9 +61,19 @@ class ContextBootstrapGeneratorTests {
 		ContextBootstrapStructure structure = this.generatorTester
 				.generate(this.contextRunner.withUserConfiguration(SimpleConfiguration.class));
 		assertThat(structure).contextBootstrap().contains(
-				"context.registerBean(SimpleConfiguration.class, SimpleConfiguration::new);",
-				"context.registerBean(String.class, () -> context.getBean(SimpleConfiguration.class).stringBean());",
-				"context.registerBean(Integer.class, () -> context.getBean(SimpleConfiguration.class).integerBean());");
+				"context.registerBean(\"simpleConfiguration\", SimpleConfiguration.class, SimpleConfiguration::new);",
+				"context.registerBean(\"stringBean\", String.class, () -> context.getBean(SimpleConfiguration.class).stringBean());",
+				"context.registerBean(\"integerBean\", Integer.class, () -> context.getBean(SimpleConfiguration.class).integerBean());");
+	}
+
+	@Test
+	void bootstrapClassWithAutoConfiguration() {
+		ContextBootstrapStructure structure = this.generatorTester.generate(
+				this.contextRunner.withConfiguration(AutoConfigurations.of(ProjectInfoAutoConfiguration.class)));
+		// NOTE: application context runner does not register auto-config as FQNs
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"projectInfoAutoConfiguration\", ProjectInfoAutoConfiguration.class, () -> new ProjectInfoAutoConfiguration(context.getBean(ProjectInfoProperties.class)));",
+				"context.registerBean(\"spring.info-org.springframework.boot.autoconfigure.info.ProjectInfoProperties\", ProjectInfoProperties.class, ProjectInfoProperties::new);");
 	}
 
 }
