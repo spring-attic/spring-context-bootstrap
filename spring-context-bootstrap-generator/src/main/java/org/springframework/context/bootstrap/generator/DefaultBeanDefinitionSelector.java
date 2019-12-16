@@ -30,12 +30,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 public class DefaultBeanDefinitionSelector implements BeanDefinitionSelector {
 
 	private static final List<String> BEAN_POST_PROCESSOR_CLASS_NAME = Arrays
-			.asList("org.springframework.context.annotation.ConfigurationClassPostProcessor"); // Configuration
-																								// class
-																								// parsing
-
-	// "org.springframework.context.annotation.CommonAnnotationBeanPostProcessor"); We
-	// need to support init/destroy method there
+			.asList("org.springframework.context.annotation.ConfigurationClassPostProcessor");
 
 	@Override
 	public Boolean select(BeanDefinition beanDefinition) {
