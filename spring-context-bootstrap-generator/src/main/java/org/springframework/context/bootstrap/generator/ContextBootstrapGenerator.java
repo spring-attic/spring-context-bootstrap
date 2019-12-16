@@ -19,13 +19,15 @@ package org.springframework.context.bootstrap.generator;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.lang.model.element.Modifier;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.CodeBlock.Builder;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -33,13 +35,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.context.bootstrap.generator.value.BeanValueSupplier;
+import org.springframework.context.bootstrap.generator.value.ConstructorBeanValueSupplier;
+import org.springframework.context.bootstrap.generator.value.MethodBeanValueSupplier;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.core.ResolvableType;
-import org.springframework.core.env.Environment;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -53,17 +55,22 @@ public class ContextBootstrapGenerator {
 
 	private static final Log logger = LogFactory.getLog(ContextBootstrapGenerator.class);
 
-	private final ConfigurableListableBeanFactory beanFactory;
-
 	private final BeanDefinitionSelector selector;
 
-	public ContextBootstrapGenerator(ConfigurableListableBeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
+	private final Map<String, ProtectedBootstrapClass> protectedBootstrapClasses = new HashMap<>();
+
+	public ContextBootstrapGenerator() {
 		this.selector = new DefaultBeanDefinitionSelector();
 	}
 
-	public JavaFile generateBootstrapClass(String packageName) {
-		return createClass(packageName, "ContextBootstrap", generateBootstrapMethod());
+	public List<JavaFile> generateBootstrapClass(ConfigurableListableBeanFactory beanFactory, String packageName) {
+		List<JavaFile> bootstrapClasses = new ArrayList<>();
+		bootstrapClasses
+				.add(createClass(packageName, "ContextBootstrap", generateBootstrapMethod(beanFactory, packageName)));
+		for (ProtectedBootstrapClass protectedBootstrapClass : this.protectedBootstrapClasses.values()) {
+			bootstrapClasses.add(protectedBootstrapClass.build());
+		}
+		return bootstrapClasses;
 	}
 
 	public JavaFile createClass(String packageName, String bootstrapClassName, MethodSpec bootstrapMethod) {
@@ -71,108 +78,63 @@ public class ContextBootstrapGenerator {
 				.addMethod(bootstrapMethod).build()).build();
 	}
 
-	public MethodSpec generateBootstrapMethod() {
+	public MethodSpec generateBootstrapMethod(ConfigurableListableBeanFactory beanFactory, String packageName) {
 		MethodSpec.Builder method = MethodSpec.methodBuilder("bootstrap").addModifiers(Modifier.PUBLIC)
 				.addParameter(GenericApplicationContext.class, "context");
-		String[] beanNames = this.beanFactory.getBeanDefinitionNames();
+		String[] beanNames = beanFactory.getBeanDefinitionNames();
 		for (String beanName : beanNames) {
-			handleBeanDefinition(method, beanName, this.beanFactory.getMergedBeanDefinition(beanName));
+			BeanDefinition beanDefinition = beanFactory.getMergedBeanDefinition(beanName);
+			if (this.selector.select(beanDefinition)) {
+				BeanValueSupplier beanValueSupplier = getBeanValueSupplier(beanDefinition);
+				if (beanValueSupplier != null) {
+					CodeBlock registrationStatement = generateBeanRegistrationStatement(beanName, beanValueSupplier);
+					if (beanValueSupplier.isAccessibleFrom(packageName)) {
+						method.addStatement(registrationStatement);
+					}
+					else {
+						String protectedPackageName = beanValueSupplier.getDeclaringType().getPackage().getName();
+						ProtectedBootstrapClass protectedBootstrapClass = this.protectedBootstrapClasses
+								.computeIfAbsent(protectedPackageName, ProtectedBootstrapClass::new);
+						protectedBootstrapClass.addBeanRegistrationMethod(beanName, beanValueSupplier.getType(),
+								registrationStatement);
+						CodeBlock.Builder code = CodeBlock.builder();
+						ClassName protectedClassName = ClassName.get(protectedPackageName, "ContextBootstrap");
+						code.add("$T.$L(context)", protectedClassName,
+								ProtectedBootstrapClass.registerBeanMethodName(beanName, beanValueSupplier.getType()));
+						method.addStatement(code.build());
+					}
+				}
+			}
 		}
 		return method.build();
 	}
 
-	private void handleBeanDefinition(MethodSpec.Builder method, String beanName, BeanDefinition beanDefinition) {
-		if (!this.selector.select(beanDefinition)) {
-			return;
-		}
+	private BeanValueSupplier getBeanValueSupplier(BeanDefinition beanDefinition) {
 		// Remove CGLIB classes
 		Class<?> type = ClassUtils.getUserClass(beanDefinition.getResolvableType().getRawClass());
-		CodeBlock.Builder code = CodeBlock.builder();
-		code.add("context.registerBean($S, $T.class, ", beanName, type);
-		boolean handled = handleBeanValueSupplier(code, beanDefinition, type);
-		code.add(")"); // End of registerBean
-		if (handled) {
-			method.addStatement(code.build());
-		}
-	}
-
-	private boolean handleBeanValueSupplier(Builder code, BeanDefinition beanDefinition, Class<?> type) {
 		if (beanDefinition instanceof RootBeanDefinition) {
 			Field field = ReflectionUtils.findField(RootBeanDefinition.class, "resolvedConstructorOrFactoryMethod");
 			ReflectionUtils.makeAccessible(field);
 			Object factoryExecutable = ReflectionUtils.getField(field, beanDefinition);
 			if (factoryExecutable instanceof Method) {
-				handleBeanFactoryMethodSupplier(code, (Method) factoryExecutable);
+				return new MethodBeanValueSupplier(type, (Method) factoryExecutable);
 			}
 			else if (factoryExecutable instanceof Constructor) {
-				handleBeanConstructorSupplier(code, (Constructor<?>) factoryExecutable, type);
+				return new ConstructorBeanValueSupplier(type, (Constructor<?>) factoryExecutable);
 			}
 			// TODO: handle FactoryBean
-			else {
-				logger.error("Failed to handle bean with definition " + beanDefinition);
-				return false;
-			}
 		}
-		else {
-			code.add("$T::new)", type);
-		}
-		return true;
+		logger.error("Failed to handle bean with definition " + beanDefinition);
+		return null;
+
 	}
 
-	private void handleBeanFactoryMethodSupplier(CodeBlock.Builder code, Method factoryMethod) {
-		code.add("() -> ");
-		if (java.lang.reflect.Modifier.isStatic(factoryMethod.getModifiers())) {
-			code.add("$T", factoryMethod.getDeclaringClass());
-		}
-		else {
-			code.add("context.getBean($T.class)", factoryMethod.getDeclaringClass());
-		}
-		code.add(".$L(", factoryMethod.getName());
-		handleParameters(code, factoryMethod.getParameters(),
-				(i) -> ResolvableType.forMethodParameter(factoryMethod, i));
-		code.add(")");
-	}
-
-	private void handleBeanConstructorSupplier(CodeBlock.Builder code, Constructor<?> constructor, Class<?> type) {
-		Parameter[] parameters = constructor.getParameters();
-		if (parameters.length == 0) {
-			code.add("$T::new", type);
-		}
-		else {
-			code.add("() -> new $T(", constructor.getDeclaringClass());
-			handleParameters(code, parameters, (i) -> ResolvableType.forConstructorParameter(constructor, i));
-			code.add(")"); // End of constructor
-		}
-	}
-
-	private void handleParameters(CodeBlock.Builder code, Parameter[] parameters,
-			Function<Integer, ResolvableType> parameterTypeFactory) {
-		for (int i = 0; i < parameters.length; i++) {
-			handleDependency(code, parameters[i], parameterTypeFactory.apply(i));
-			if (i < parameters.length - 1) {
-				code.add(", ");
-			}
-		}
-	}
-
-	private void handleDependency(CodeBlock.Builder code, Parameter parameter, ResolvableType parameterType) {
-		Class<?> resolvedClass = parameterType.toClass();
-		if (resolvedClass.isAssignableFrom(ObjectProvider.class)) {
-			code.add("context.getBeanProvider($T.class)",
-					parameterType.as(ObjectProvider.class).getGeneric(0).getRawClass());
-		}
-		else if (resolvedClass.isAssignableFrom(GenericApplicationContext.class)) {
-			code.add("context");
-		}
-		else if (resolvedClass.isAssignableFrom(BeanFactory.class)) {
-			code.add("context.getBeanFactory()");
-		}
-		else if (resolvedClass.isAssignableFrom(Environment.class)) {
-			code.add("context.getEnvironment()");
-		}
-		else {
-			code.add("context.getBean($T.class)", resolvedClass);
-		}
+	public CodeBlock generateBeanRegistrationStatement(String beanName, BeanValueSupplier beanValueSupplier) {
+		CodeBlock.Builder code = CodeBlock.builder();
+		code.add("context.registerBean($S, $T.class, ", beanName, beanValueSupplier.getType());
+		beanValueSupplier.handleValueSupplier(code);
+		code.add(")"); // End of registerBean
+		return code.build();
 	}
 
 }

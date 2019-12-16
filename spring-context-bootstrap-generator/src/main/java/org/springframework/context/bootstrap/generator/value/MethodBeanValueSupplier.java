@@ -1,0 +1,64 @@
+/*
+ * Copyright 2012-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.context.bootstrap.generator.value;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
+import com.squareup.javapoet.CodeBlock;
+
+import org.springframework.core.ResolvableType;
+
+/**
+ * A factory method-based {@link BeanValueSupplier}.
+ *
+ * @author Stephane Nicoll
+ */
+public class MethodBeanValueSupplier extends AbstractBeanValueSupplier {
+
+	private final Method method;
+
+	public MethodBeanValueSupplier(Class<?> type, Method method) {
+		super(type);
+		this.method = method;
+	}
+
+	@Override
+	public Class<?> getDeclaringType() {
+		return this.method.getDeclaringClass();
+	}
+
+	@Override
+	public boolean isAccessibleFrom(String packageName) {
+		return super.isAccessibleFrom(packageName) && Modifier.isPublic(this.method.getModifiers());
+	}
+
+	@Override
+	public void handleValueSupplier(CodeBlock.Builder code) {
+		code.add("() -> ");
+		if (java.lang.reflect.Modifier.isStatic(this.method.getModifiers())) {
+			code.add("$T", getDeclaringType());
+		}
+		else {
+			code.add("context.getBean($T.class)", this.method.getDeclaringClass());
+		}
+		code.add(".$L(", this.method.getName());
+		handleParameters(code, this.method.getParameters(), (i) -> ResolvableType.forMethodParameter(this.method, i));
+		code.add(")");
+	}
+
+}

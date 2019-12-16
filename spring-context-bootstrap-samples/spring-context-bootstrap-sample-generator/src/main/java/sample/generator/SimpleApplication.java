@@ -19,6 +19,7 @@ package sample.generator;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.List;
 
 import com.squareup.javapoet.JavaFile;
 
@@ -33,11 +34,13 @@ public class SimpleApplication {
 	public static void main(String[] args) throws IOException {
 		ConfigurableApplicationContext context = SpringApplication.run(SimpleApplication.class, args);
 
-		JavaFile javaFile = new ContextBootstrapGenerator(context.getBeanFactory())
-				.generateBootstrapClass("sample.generator");
+		List<JavaFile> javaFiles = new ContextBootstrapGenerator().generateBootstrapClass(context.getBeanFactory(),
+				"sample.generator");
 		// In IntelliJ IDEA, make sure that "working directory" is set to $MODULE_DIR$
 		Path srcDirectory = FileSystems.getDefault().getPath(".").resolve("src/main/java");
-		javaFile.writeTo(srcDirectory);
+		for (JavaFile javaFile : javaFiles) {
+			javaFile.writeTo(srcDirectory);
+		}
 	}
 
 }

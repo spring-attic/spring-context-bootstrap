@@ -1,0 +1,65 @@
+/*
+ * Copyright 2012-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.context.bootstrap.generator.value;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+
+import com.squareup.javapoet.CodeBlock;
+
+import org.springframework.core.ResolvableType;
+
+/**
+ * A constructor-based {@link BeanValueSupplier}.
+ *
+ * @author Stephane Nicoll
+ */
+public class ConstructorBeanValueSupplier extends AbstractBeanValueSupplier {
+
+	private final Constructor<?> constructor;
+
+	public ConstructorBeanValueSupplier(Class<?> type, Constructor<?> constructor) {
+		super(type);
+		this.constructor = constructor;
+	}
+
+	@Override
+	public Class<?> getDeclaringType() {
+		return this.constructor.getDeclaringClass();
+	}
+
+	@Override
+	public boolean isAccessibleFrom(String packageName) {
+		return super.isAccessibleFrom(packageName) && Modifier.isPublic(this.constructor.getModifiers());
+	}
+
+	@Override
+	public void handleValueSupplier(CodeBlock.Builder code) {
+		Parameter[] parameters = this.constructor.getParameters();
+		if (parameters.length == 0) {
+			code.add("$T::new", getType());
+		}
+		else {
+			code.add("() -> new $T(", getDeclaringType());
+			handleParameters(code, parameters, (i) -> ResolvableType.forConstructorParameter(this.constructor, i));
+			code.add(")"); // End of constructor
+		}
+
+	}
+
+}

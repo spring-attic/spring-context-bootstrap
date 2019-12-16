@@ -25,6 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.bootstrap.generator.sample.ProtectedConfigurationImport;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapGeneratorTester;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapStructure;
@@ -74,6 +75,20 @@ class ContextBootstrapGeneratorTests {
 		assertThat(structure).contextBootstrap().contains(
 				"context.registerBean(\"projectInfoAutoConfiguration\", ProjectInfoAutoConfiguration.class, () -> new ProjectInfoAutoConfiguration(context.getBean(ProjectInfoProperties.class)));",
 				"context.registerBean(\"spring.info-org.springframework.boot.autoconfigure.info.ProjectInfoProperties\", ProjectInfoProperties.class, ProjectInfoProperties::new);");
+	}
+
+	@Test
+	void bootstrapClassWithPackageProtectedConfiguration() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(ProtectedConfigurationImport.class));
+		assertThat(structure).source("org.springframework.context.bootstrap.generator.sample", "ContextBootstrap")
+				.lines()
+				.containsSequence("  public static void registerAnotherStringBean(GenericApplicationContext context) {",
+						"    context.registerBean(\"anotherStringBean\", String.class, () -> context.getBean(ProtectedConfiguration.class).anotherStringBean());",
+						"  }");
+		assertThat(structure).contextBootstrap().contains(
+				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerProtectedConfiguration(context);",
+				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerAnotherStringBean(context);");
 	}
 
 }

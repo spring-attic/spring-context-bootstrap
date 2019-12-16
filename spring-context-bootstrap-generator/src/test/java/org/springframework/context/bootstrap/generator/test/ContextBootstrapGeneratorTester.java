@@ -19,6 +19,7 @@ package org.springframework.context.bootstrap.generator.test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import com.squareup.javapoet.JavaFile;
 
@@ -48,9 +49,9 @@ public class ContextBootstrapGeneratorTester {
 	public ContextBootstrapStructure generate(AbstractApplicationContextRunner<?, ?, ?> runner) {
 		Path srcDirectory = generateSrcDirectory();
 		runner.run((context) -> {
-			JavaFile javaFile = new ContextBootstrapGenerator(context.getSourceApplicationContext().getBeanFactory())
-					.generateBootstrapClass(this.packageName);
-			writeSource(srcDirectory, javaFile);
+			List<JavaFile> javaFiles = new ContextBootstrapGenerator()
+					.generateBootstrapClass(context.getSourceApplicationContext().getBeanFactory(), this.packageName);
+			writeSources(srcDirectory, javaFiles);
 		});
 		return new ContextBootstrapStructure(srcDirectory, this.packageName);
 	}
@@ -64,9 +65,11 @@ public class ContextBootstrapGeneratorTester {
 		}
 	}
 
-	private void writeSource(Path srcDirectory, JavaFile javaFile) {
+	private void writeSources(Path srcDirectory, List<JavaFile> javaFiles) {
 		try {
-			javaFile.writeTo(srcDirectory);
+			for (JavaFile javaFile : javaFiles) {
+				javaFile.writeTo(srcDirectory);
+			}
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException("Failed to write source code to disk ", ex);
