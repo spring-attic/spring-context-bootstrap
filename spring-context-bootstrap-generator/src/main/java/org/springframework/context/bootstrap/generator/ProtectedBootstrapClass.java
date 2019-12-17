@@ -19,6 +19,7 @@ package org.springframework.context.bootstrap.generator;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
 import com.squareup.javapoet.JavaFile;
@@ -63,11 +64,12 @@ public class ProtectedBootstrapClass {
 	}
 
 	static String registerBeanMethodName(String beanName, Class<?> type) {
-		if (beanName.contains(".")) {
-			// YOLO, must be an FQN
-			return "register" + type.getSimpleName();
-		}
-		return "register" + StringUtils.capitalize(beanName);
+		String target = (isValidName(beanName)) ? beanName : type.getSimpleName();
+		return "register" + StringUtils.capitalize(target);
+	}
+
+	private static boolean isValidName(String className) {
+		return SourceVersion.isIdentifier(className) && !SourceVersion.isKeyword(className);
 	}
 
 }

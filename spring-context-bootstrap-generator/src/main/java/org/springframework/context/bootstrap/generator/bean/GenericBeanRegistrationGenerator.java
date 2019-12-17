@@ -88,8 +88,12 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 
 	// rationalize
 	private String getBeanIdentifier(String beanName, Class<?> type) {
-		String target = (SourceVersion.isName(beanName)) ? beanName : type.getSimpleName();
+		String target = (isValidName(beanName)) ? beanName : type.getSimpleName();
 		return StringUtils.uncapitalize(target);
+	}
+
+	private static boolean isValidName(String className) {
+		return SourceVersion.isIdentifier(className) && !SourceVersion.isKeyword(className);
 	}
 
 }

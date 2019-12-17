@@ -22,7 +22,7 @@ import java.util.List;
 import org.springframework.beans.factory.config.BeanDefinition;
 
 /**
- * A selector that disacards the {@link BeanDefinition} instances the boostrap class is
+ * A selector that discard the {@link BeanDefinition} instances the bootstrap class is
  * replacing.
  *
  * @author Stephane Nicoll
@@ -34,7 +34,7 @@ public class DefaultBeanDefinitionSelector implements BeanDefinitionSelector {
 
 	@Override
 	public Boolean select(BeanDefinition beanDefinition) {
-		return !BEAN_POST_PROCESSOR_CLASS_NAME.contains(beanDefinition.getResolvableType().getRawClass().getName());
+		return !BEAN_POST_PROCESSOR_CLASS_NAME.contains(beanDefinition.getResolvableType().toClass().getName());
 	}
 
 }
