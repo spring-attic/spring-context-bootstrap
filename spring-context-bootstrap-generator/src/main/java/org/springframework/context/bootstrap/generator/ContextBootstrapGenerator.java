@@ -17,6 +17,7 @@
 package org.springframework.context.bootstrap.generator;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -38,10 +39,14 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.context.bootstrap.generator.value.BeanValueSupplier;
-import org.springframework.context.bootstrap.generator.value.ConstructorBeanValueSupplier;
-import org.springframework.context.bootstrap.generator.value.MethodBeanValueSupplier;
+import org.springframework.context.bootstrap.generator.bean.BeanRegistrationGenerator;
+import org.springframework.context.bootstrap.generator.bean.BeanValueSupplier;
+import org.springframework.context.bootstrap.generator.bean.ConstructorBeanValueSupplier;
+import org.springframework.context.bootstrap.generator.bean.GenericBeanRegistrationGenerator;
+import org.springframework.context.bootstrap.generator.bean.MethodBeanValueSupplier;
+import org.springframework.context.bootstrap.generator.bean.SimpleBeanRegistrationGenerator;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.ResolvableType;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -85,18 +90,19 @@ public class ContextBootstrapGenerator {
 		for (String beanName : beanNames) {
 			BeanDefinition beanDefinition = beanFactory.getMergedBeanDefinition(beanName);
 			if (this.selector.select(beanDefinition)) {
-				BeanValueSupplier beanValueSupplier = getBeanValueSupplier(beanDefinition);
-				if (beanValueSupplier != null) {
-					CodeBlock registrationStatement = generateBeanRegistrationStatement(beanName, beanValueSupplier);
+				BeanRegistrationGenerator beanRegistrationGenerator = getBeanRegistrationGenerator(beanName,
+						beanDefinition);
+				if (beanRegistrationGenerator != null) {
+					BeanValueSupplier beanValueSupplier = beanRegistrationGenerator.getBeanValueSupplier();
 					if (beanValueSupplier.isAccessibleFrom(packageName)) {
-						method.addStatement(registrationStatement);
+						beanRegistrationGenerator.generateBeanRegistration(method);
 					}
 					else {
 						String protectedPackageName = beanValueSupplier.getDeclaringType().getPackage().getName();
 						ProtectedBootstrapClass protectedBootstrapClass = this.protectedBootstrapClasses
 								.computeIfAbsent(protectedPackageName, ProtectedBootstrapClass::new);
 						protectedBootstrapClass.addBeanRegistrationMethod(beanName, beanValueSupplier.getType(),
-								registrationStatement);
+								beanRegistrationGenerator);
 						CodeBlock.Builder code = CodeBlock.builder();
 						ClassName protectedClassName = ClassName.get(protectedPackageName, "ContextBootstrap");
 						code.add("$T.$L(context)", protectedClassName,
@@ -109,32 +115,41 @@ public class ContextBootstrapGenerator {
 		return method.build();
 	}
 
+	private BeanRegistrationGenerator getBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition) {
+		ResolvableType beanType = beanDefinition.getResolvableType();
+		BeanValueSupplier beanValueSupplier = getBeanValueSupplier(beanDefinition);
+		if (beanValueSupplier != null) {
+			if (beanType.hasGenerics()) {
+				return new GenericBeanRegistrationGenerator(beanName, beanType, beanValueSupplier);
+			}
+			else {
+				return new SimpleBeanRegistrationGenerator(beanName, beanType, beanValueSupplier);
+			}
+		}
+		return null;
+	}
+
 	private BeanValueSupplier getBeanValueSupplier(BeanDefinition beanDefinition) {
 		// Remove CGLIB classes
 		Class<?> type = ClassUtils.getUserClass(beanDefinition.getResolvableType().getRawClass());
 		if (beanDefinition instanceof RootBeanDefinition) {
-			Field field = ReflectionUtils.findField(RootBeanDefinition.class, "resolvedConstructorOrFactoryMethod");
-			ReflectionUtils.makeAccessible(field);
-			Object factoryExecutable = ReflectionUtils.getField(field, beanDefinition);
+			Executable factoryExecutable = getField(beanDefinition, "resolvedConstructorOrFactoryMethod",
+					Executable.class);
 			if (factoryExecutable instanceof Method) {
 				return new MethodBeanValueSupplier(type, (Method) factoryExecutable);
 			}
 			else if (factoryExecutable instanceof Constructor) {
 				return new ConstructorBeanValueSupplier(type, (Constructor<?>) factoryExecutable);
 			}
-			// TODO: handle FactoryBean
 		}
 		logger.error("Failed to handle bean with definition " + beanDefinition);
 		return null;
-
 	}
 
-	public CodeBlock generateBeanRegistrationStatement(String beanName, BeanValueSupplier beanValueSupplier) {
-		CodeBlock.Builder code = CodeBlock.builder();
-		code.add("context.registerBean($S, $T.class, ", beanName, beanValueSupplier.getType());
-		beanValueSupplier.handleValueSupplier(code);
-		code.add(")"); // End of registerBean
-		return code.build();
+	private <T> T getField(BeanDefinition beanDefinition, String fieldName, Class<T> targetType) {
+		Field field = ReflectionUtils.findField(RootBeanDefinition.class, fieldName);
+		ReflectionUtils.makeAccessible(field);
+		return targetType.cast(ReflectionUtils.getField(field, beanDefinition));
 	}
 
 }

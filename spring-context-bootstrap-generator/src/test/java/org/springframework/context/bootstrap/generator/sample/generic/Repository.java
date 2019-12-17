@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package org.springframework.context.bootstrap.generator.value;
-
-import com.squareup.javapoet.CodeBlock;
+package org.springframework.context.bootstrap.generator.sample.generic;
 
 /**
- * Abstract how to register a bean in the context.
+ * Test type with generic information.
  *
  * @author Stephane Nicoll
  */
-public interface BeanValueSupplier {
+public class Repository<T> {
 
-	Class<?> getType();
-
-	Class<?> getDeclaringType();
-
-	boolean isAccessibleFrom(String packageName);
-
-	void handleValueSupplier(CodeBlock.Builder code);
+	public T findById(String key) {
+		return null;
+	}
 
 }

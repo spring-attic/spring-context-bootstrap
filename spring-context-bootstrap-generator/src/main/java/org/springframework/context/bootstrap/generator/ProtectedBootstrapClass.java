@@ -21,11 +21,11 @@ import java.util.List;
 
 import javax.lang.model.element.Modifier;
 
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
+import org.springframework.context.bootstrap.generator.bean.BeanRegistrationGenerator;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.util.StringUtils;
 
@@ -49,11 +49,12 @@ public class ProtectedBootstrapClass {
 		this.type = TypeSpec.classBuilder("ContextBootstrap").addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 	}
 
-	public void addBeanRegistrationMethod(String beanName, Class<?> type, CodeBlock statement) {
+	public void addBeanRegistrationMethod(String beanName, Class<?> type,
+			BeanRegistrationGenerator beanRegistrationGenerator) {
 		MethodSpec.Builder method = MethodSpec.methodBuilder(registerBeanMethodName(beanName, type))
 				.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
 				.addParameter(GenericApplicationContext.class, "context");
-		method.addStatement(statement);
+		beanRegistrationGenerator.generateBeanRegistration(method);
 		this.methods.add(method.build());
 	}
 

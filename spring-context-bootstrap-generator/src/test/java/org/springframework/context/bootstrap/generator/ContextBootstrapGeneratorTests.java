@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.ProtectedConfigurationImport;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
+import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapGeneratorTester;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapStructure;
 import org.springframework.context.support.GenericApplicationContext;
@@ -89,6 +90,28 @@ class ContextBootstrapGeneratorTests {
 		assertThat(structure).contextBootstrap().contains(
 				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerProtectedConfiguration(context);",
 				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerAnotherStringBean(context);");
+	}
+
+	@Test
+	void bootstrapClassWithSimpleGeneric() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(GenericConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"RootBeanDefinition stringRepositoryBeanDef = new RootBeanDefinition();",
+				"stringRepositoryBeanDef.setTargetType(ResolvableType.forClassWithGenerics(Repository.class, String.class));",
+				"stringRepositoryBeanDef.setInstanceSupplier(() -> context.getBean(GenericConfiguration.class).stringRepository());",
+				"context.registerBeanDefinition(\"stringRepository\", stringRepositoryBeanDef);");
+	}
+
+	@Test
+	void bootstrapClassWithMultipleGenerics() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(GenericConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"RootBeanDefinition stringRepositoryHolderBeanDef = new RootBeanDefinition();",
+				"stringRepositoryHolderBeanDef.setTargetType(ResolvableType.forClassWithGenerics(RepositoryHolder.class, String.class, ResolvableType.forClassWithGenerics(Repository.class, String.class)));",
+				"stringRepositoryHolderBeanDef.setInstanceSupplier(() -> context.getBean(GenericConfiguration.class).stringRepositoryHolder(context.getBean(Repository.class)));",
+				"context.registerBeanDefinition(\"stringRepositoryHolder\", stringRepositoryHolderBeanDef);");
 	}
 
 }

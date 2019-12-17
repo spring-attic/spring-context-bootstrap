@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.context.bootstrap.generator.value;
+package org.springframework.context.bootstrap.generator.bean;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
