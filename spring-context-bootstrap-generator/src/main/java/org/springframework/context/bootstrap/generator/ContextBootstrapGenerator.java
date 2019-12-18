@@ -136,10 +136,10 @@ public class ContextBootstrapGenerator {
 			Executable factoryExecutable = getField(beanDefinition, "resolvedConstructorOrFactoryMethod",
 					Executable.class);
 			if (factoryExecutable instanceof Method) {
-				return new MethodBeanValueSupplier(type, (Method) factoryExecutable);
+				return new MethodBeanValueSupplier(beanDefinition, (Method) factoryExecutable);
 			}
 			else if (factoryExecutable instanceof Constructor) {
-				return new ConstructorBeanValueSupplier(type, (Constructor<?>) factoryExecutable);
+				return new ConstructorBeanValueSupplier(beanDefinition, (Constructor<?>) factoryExecutable);
 			}
 		}
 		logger.error("Failed to handle bean with definition " + beanDefinition);

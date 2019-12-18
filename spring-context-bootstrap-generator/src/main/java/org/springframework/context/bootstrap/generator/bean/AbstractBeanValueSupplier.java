@@ -24,9 +24,12 @@ import com.squareup.javapoet.CodeBlock;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.env.Environment;
+import org.springframework.util.ClassUtils;
 
 /**
  * Base {@link BeanValueSupplier} implementation.
@@ -35,10 +38,13 @@ import org.springframework.core.env.Environment;
  */
 public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 
+	private final BeanDefinition beanDefinition;
+
 	private final Class<?> type;
 
-	public AbstractBeanValueSupplier(Class<?> type) {
-		this.type = type;
+	public AbstractBeanValueSupplier(BeanDefinition beanDefinition) {
+		this.beanDefinition = beanDefinition;
+		this.type = ClassUtils.getUserClass(beanDefinition.getResolvableType().toClass());
 	}
 
 	@Override
@@ -54,11 +60,61 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 	protected void handleParameters(CodeBlock.Builder code, Parameter[] parameters,
 			Function<Integer, ResolvableType> parameterTypeFactory) {
 		for (int i = 0; i < parameters.length; i++) {
-			handleDependency(code, parameters[i], parameterTypeFactory.apply(i));
+			ResolvableType parameterType = parameterTypeFactory.apply(i);
+			ValueHolder userValue = this.beanDefinition.getConstructorArgumentValues().getIndexedArgumentValue(i,
+					parameterType.toClass());
+			if (userValue != null) {
+				handleUserValue(code, userValue.getValue(), parameterType);
+			}
+			else {
+				handleDependency(code, parameters[i], parameterType);
+			}
 			if (i < parameters.length - 1) {
 				code.add(", ");
 			}
 		}
+	}
+
+	// workaround to account for the Spring Boot use case for now.
+	private void handleUserValue(CodeBlock.Builder code, Object value, ResolvableType parameterType) {
+		if (parameterType.isArray()) {
+			code.add("new $T { ", parameterType.toClass());
+			if (value instanceof char[]) {
+				char[] array = (char[]) value;
+				for (int i = 0; i < array.length; i++) {
+					handleUserValue(code, array[i], ResolvableType.forClass(char.class));
+					if (i < array.length - 1) {
+						code.add(", ");
+					}
+				}
+			}
+			else if (value instanceof String[]) {
+				String[] array = (String[]) value;
+				for (int i = 0; i < array.length; i++) {
+					handleUserValue(code, array[i], ResolvableType.forClass(String.class));
+					if (i < array.length - 1) {
+						code.add(", ");
+					}
+				}
+			}
+			code.add(" }");
+		}
+		else if (value instanceof Character) {
+			code.add("'$L'", value);
+		}
+		else if (isPrimitiveOrWrapper(value)) {
+			code.add("$L", value);
+		}
+		else if (value instanceof String) {
+			code.add("$S", value);
+		}
+	}
+
+	private boolean isPrimitiveOrWrapper(Object value) {
+		Class<?> valueType = value.getClass();
+		return (valueType.isPrimitive() || valueType == Double.class || valueType == Float.class
+				|| valueType == Long.class || valueType == Integer.class || valueType == Short.class
+				|| valueType == Character.class || valueType == Byte.class || valueType == Boolean.class);
 	}
 
 	private void handleDependency(CodeBlock.Builder code, Parameter parameter, ResolvableType parameterType) {

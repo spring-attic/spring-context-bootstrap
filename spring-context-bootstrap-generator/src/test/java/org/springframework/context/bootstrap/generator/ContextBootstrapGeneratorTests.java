@@ -28,6 +28,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.ProtectedConfigurationImport;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
 import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
+import org.springframework.context.bootstrap.generator.sample.infrastructure.ArgumentValueRegistrarConfiguration;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapGeneratorTester;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapStructure;
 import org.springframework.context.support.GenericApplicationContext;
@@ -112,6 +113,14 @@ class ContextBootstrapGeneratorTests {
 				"stringRepositoryHolderBeanDef.setTargetType(ResolvableType.forClassWithGenerics(RepositoryHolder.class, String.class, ResolvableType.forClassWithGenerics(Repository.class, String.class)));",
 				"stringRepositoryHolderBeanDef.setInstanceSupplier(() -> context.getBean(GenericConfiguration.class).stringRepositoryHolder(context.getBean(Repository.class)));",
 				"context.registerBeanDefinition(\"stringRepositoryHolder\", stringRepositoryHolderBeanDef);");
+	}
+
+	@Test
+	void bootstrapClassWithArgumentValue() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(ArgumentValueRegistrarConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"argumentValueString\", String.class, () -> new String(new char[] { 'a', ' ', 't', 'e', 's', 't' }, 2, 4));");
 	}
 
 }

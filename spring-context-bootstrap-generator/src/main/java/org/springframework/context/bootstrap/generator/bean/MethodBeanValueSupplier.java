@@ -21,6 +21,7 @@ import java.lang.reflect.Modifier;
 
 import com.squareup.javapoet.CodeBlock;
 
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.core.ResolvableType;
 
 /**
@@ -32,8 +33,8 @@ public class MethodBeanValueSupplier extends AbstractBeanValueSupplier {
 
 	private final Method method;
 
-	public MethodBeanValueSupplier(Class<?> type, Method method) {
-		super(type);
+	public MethodBeanValueSupplier(BeanDefinition beanDefinition, Method method) {
+		super(beanDefinition);
 		this.method = method;
 	}
 

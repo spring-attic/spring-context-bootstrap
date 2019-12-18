@@ -22,6 +22,7 @@ import java.lang.reflect.Parameter;
 
 import com.squareup.javapoet.CodeBlock;
 
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.core.ResolvableType;
 
 /**
@@ -33,8 +34,8 @@ public class ConstructorBeanValueSupplier extends AbstractBeanValueSupplier {
 
 	private final Constructor<?> constructor;
 
-	public ConstructorBeanValueSupplier(Class<?> type, Constructor<?> constructor) {
-		super(type);
+	public ConstructorBeanValueSupplier(BeanDefinition beanDefinition, Constructor<?> constructor) {
+		super(beanDefinition);
 		this.constructor = constructor;
 	}
 
