@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import com.squareup.javapoet.CodeBlock;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.bootstrap.infrastructure.ExceptionHandler;
 import org.springframework.core.ResolvableType;
 
 /**
@@ -50,6 +51,10 @@ public class MethodBeanValueSupplier extends AbstractBeanValueSupplier {
 
 	@Override
 	public void handleValueSupplier(CodeBlock.Builder code) {
+		boolean wrapException = hasCheckedException(this.method.getExceptionTypes());
+		if (wrapException) {
+			code.add("$T.wrapException(", ExceptionHandler.class);
+		}
 		code.add("() -> ");
 		if (java.lang.reflect.Modifier.isStatic(this.method.getModifiers())) {
 			code.add("$T", getDeclaringType());
@@ -60,6 +65,9 @@ public class MethodBeanValueSupplier extends AbstractBeanValueSupplier {
 		code.add(".$L(", this.method.getName());
 		handleParameters(code, this.method.getParameters(), (i) -> ResolvableType.forMethodParameter(this.method, i));
 		code.add(")");
+		if (wrapException) {
+			code.add(")");
+		}
 	}
 
 }

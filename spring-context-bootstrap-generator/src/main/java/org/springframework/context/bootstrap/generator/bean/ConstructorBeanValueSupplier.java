@@ -23,6 +23,7 @@ import java.lang.reflect.Parameter;
 import com.squareup.javapoet.CodeBlock;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.bootstrap.infrastructure.ExceptionHandler;
 import org.springframework.core.ResolvableType;
 
 /**
@@ -51,6 +52,10 @@ public class ConstructorBeanValueSupplier extends AbstractBeanValueSupplier {
 
 	@Override
 	public void handleValueSupplier(CodeBlock.Builder code) {
+		boolean wrapException = hasCheckedException(this.constructor.getExceptionTypes());
+		if (wrapException) {
+			code.add("$T.wrapException(", ExceptionHandler.class);
+		}
 		Parameter[] parameters = this.constructor.getParameters();
 		if (parameters.length == 0) {
 			code.add("$T::new", getType());
@@ -60,7 +65,9 @@ public class ConstructorBeanValueSupplier extends AbstractBeanValueSupplier {
 			handleParameters(code, parameters, (i) -> ResolvableType.forConstructorParameter(this.constructor, i));
 			code.add(")"); // End of constructor
 		}
-
+		if (wrapException) {
+			code.add(")");
+		}
 	}
 
 }

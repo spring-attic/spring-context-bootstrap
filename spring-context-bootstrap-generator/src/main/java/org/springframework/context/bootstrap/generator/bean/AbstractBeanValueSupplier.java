@@ -18,6 +18,7 @@ package org.springframework.context.bootstrap.generator.bean;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import com.squareup.javapoet.CodeBlock;
@@ -55,6 +56,10 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 	@Override
 	public boolean isAccessibleFrom(String packageName) {
 		return Modifier.isPublic(this.type.getModifiers());
+	}
+
+	protected boolean hasCheckedException(Class<?>... exceptionTypes) {
+		return Arrays.stream(exceptionTypes).anyMatch((ex) -> !RuntimeException.class.isAssignableFrom(ex));
 	}
 
 	protected void handleParameters(CodeBlock.Builder code, Parameter[] parameters,

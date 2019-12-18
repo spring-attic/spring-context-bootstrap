@@ -27,6 +27,8 @@ import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.ProtectedConfigurationImport;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
+import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConfiguration;
+import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConstructorConfiguration;
 import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
 import org.springframework.context.bootstrap.generator.sample.infrastructure.ArgumentValueRegistrarConfiguration;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapGeneratorTester;
@@ -121,6 +123,22 @@ class ContextBootstrapGeneratorTests {
 				.generate(this.contextRunner.withUserConfiguration(ArgumentValueRegistrarConfiguration.class));
 		assertThat(structure).contextBootstrap().contains(
 				"context.registerBean(\"argumentValueString\", String.class, () -> new String(new char[] { 'a', ' ', 't', 'e', 's', 't' }, 2, 4));");
+	}
+
+	@Test
+	void bootstrapClassWithCheckedExceptionOnMethodWrapsException() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(ExceptionConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"checkedException\", String.class, ExceptionHandler.wrapException(() -> context.getBean(ExceptionConfiguration.class).checkedException()));");
+	}
+
+	@Test
+	void bootstrapClassWithCheckedExceptionOnConstructorWrapsException() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(ExceptionConstructorConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"exceptionConstructorConfiguration\", ExceptionConstructorConfiguration.class, ExceptionHandler.wrapException(ExceptionConstructorConfiguration::new));");
 	}
 
 }
