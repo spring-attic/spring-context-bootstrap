@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.context.bootstrap.generator.sample;
+package org.springframework.context.bootstrap.generator.sample.visibility;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;

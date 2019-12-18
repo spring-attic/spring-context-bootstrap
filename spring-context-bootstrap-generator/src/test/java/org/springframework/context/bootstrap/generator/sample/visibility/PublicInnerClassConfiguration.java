@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.context.bootstrap.generator.sample;
+package org.springframework.context.bootstrap.generator.sample.visibility;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class PublicOuterClassConfiguration {
+class PublicInnerClassConfiguration {
 
 	@Configuration
-	protected static class ProtectedInnerConfiguration {
+	public static class InnerConfiguration {
 
 		@Bean
-		public String anotherInnerBean() {
-			return "anotherInner";
+		public String innerBean() {
+			return "inner";
 		}
 
 	}
