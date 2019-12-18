@@ -26,6 +26,8 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.ProtectedConfigurationImport;
+import org.springframework.context.bootstrap.generator.sample.PublicInnerClassConfigurationImport;
+import org.springframework.context.bootstrap.generator.sample.PublicOuterClassConfiguration;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConfiguration;
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConstructorConfiguration;
@@ -93,6 +95,35 @@ class ContextBootstrapGeneratorTests {
 		assertThat(structure).contextBootstrap().contains(
 				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerProtectedConfiguration(context);",
 				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerAnotherStringBean(context);");
+	}
+
+	@Test
+	void bootstrapClassWithPublicInnerOnPackageProtectedOuterConfiguration() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(PublicInnerClassConfigurationImport.class));
+		assertThat(structure).source("org.springframework.context.bootstrap.generator.sample", "ContextBootstrap")
+				.lines().containsSequence("  public static void registerInnerBean(GenericApplicationContext context) {",
+						"    context.registerBean(\"innerBean\", String.class, () -> context.getBean(PublicInnerClassConfiguration.InnerConfiguration.class).innerBean());",
+						"  }");
+		assertThat(structure).contextBootstrap().contains(
+				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerPublicInnerClassConfiguration(context);",
+				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerInnerConfiguration(context);",
+				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerInnerBean(context);");
+	}
+
+	@Test
+	void bootstrapClassWithPackageProtectedInnerConfiguration() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(PublicOuterClassConfiguration.class));
+		assertThat(structure).source("org.springframework.context.bootstrap.generator.sample", "ContextBootstrap")
+				.lines()
+				.containsSequence("  public static void registerAnotherInnerBean(GenericApplicationContext context) {",
+						"    context.registerBean(\"anotherInnerBean\", String.class, () -> context.getBean(PublicOuterClassConfiguration.ProtectedInnerConfiguration.class).anotherInnerBean());",
+						"  }");
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"publicOuterClassConfiguration\", PublicOuterClassConfiguration.class, PublicOuterClassConfiguration::new);",
+				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerProtectedInnerConfiguration(context);",
+				"org.springframework.context.bootstrap.generator.sample.ContextBootstrap.registerAnotherInnerBean(context);");
 	}
 
 	@Test

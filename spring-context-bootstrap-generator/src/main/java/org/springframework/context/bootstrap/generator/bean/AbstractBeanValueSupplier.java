@@ -55,7 +55,19 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 
 	@Override
 	public boolean isAccessibleFrom(String packageName) {
-		return Modifier.isPublic(this.type.getModifiers());
+		return isPublicClass(this.type) && isPublicClass(getDeclaringType());
+	}
+
+	protected boolean isPublicClass(Class<?> target) {
+		boolean publicClass = Modifier.isPublic(target.getModifiers());
+		if (!publicClass) {
+			return false;
+		}
+		Class<?> declaringClass = target.getDeclaringClass();
+		if (declaringClass == null) {
+			return true;
+		}
+		return isPublicClass(declaringClass);
 	}
 
 	protected boolean hasCheckedException(Class<?>... exceptionTypes) {
