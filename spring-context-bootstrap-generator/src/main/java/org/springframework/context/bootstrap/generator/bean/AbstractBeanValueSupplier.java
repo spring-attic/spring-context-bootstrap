@@ -70,6 +70,15 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 		return isPublicClass(declaringClass);
 	}
 
+	protected boolean areAllPublicClasses(Class<?>... parameterTypes) {
+		for (Class<?> parameterType : parameterTypes) {
+			if (!isPublicClass(parameterType)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	protected boolean hasCheckedException(Class<?>... exceptionTypes) {
 		return Arrays.stream(exceptionTypes).anyMatch((ex) -> !RuntimeException.class.isAssignableFrom(ex));
 	}

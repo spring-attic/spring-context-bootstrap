@@ -31,6 +31,8 @@ import org.springframework.context.bootstrap.generator.sample.exception.Exceptio
 import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
 import org.springframework.context.bootstrap.generator.sample.infrastructure.ArgumentValueRegistrarConfiguration;
 import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedConfigurationImport;
+import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedConstructorParameterConfiguration;
+import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedMethodParameterConfiguration;
 import org.springframework.context.bootstrap.generator.sample.visibility.PublicInnerClassConfigurationImport;
 import org.springframework.context.bootstrap.generator.sample.visibility.PublicOuterClassConfiguration;
 import org.springframework.context.bootstrap.generator.test.ContextBootstrapGeneratorTester;
@@ -125,6 +127,36 @@ class ContextBootstrapGeneratorTests {
 				"context.registerBean(\"publicOuterClassConfiguration\", PublicOuterClassConfiguration.class, PublicOuterClassConfiguration::new);",
 				"org.springframework.context.bootstrap.generator.sample.visibility.ContextBootstrap.registerProtectedInnerConfiguration(context);",
 				"org.springframework.context.bootstrap.generator.sample.visibility.ContextBootstrap.registerAnotherInnerBean(context);");
+	}
+
+	@Test
+	void bootstrapClassWithProtectedConstructorParameter() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(ProtectedConstructorParameterConfiguration.class));
+		assertThat(structure)
+				.source("org.springframework.context.bootstrap.generator.sample.visibility", "ContextBootstrap").lines()
+				.containsSequence(
+						"  public static void registerProtectedParameter(GenericApplicationContext context) {",
+						"    context.registerBean(\"org.springframework.context.bootstrap.generator.sample.visibility.ProtectedParameter\", ProtectedParameter.class, () -> new ProtectedParameter(context.getBean(ProtectedType.class)));",
+						"  }");
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"protectedConstructorParameterConfiguration\", ProtectedConstructorParameterConfiguration.class, ProtectedConstructorParameterConfiguration::new);",
+				"org.springframework.context.bootstrap.generator.sample.visibility.ContextBootstrap.registerProtectedParameter(context);");
+	}
+
+	@Test
+	void bootstrapClassWithProtectedMethodParameter() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(ProtectedMethodParameterConfiguration.class));
+		assertThat(structure)
+				.source("org.springframework.context.bootstrap.generator.sample.visibility", "ContextBootstrap").lines()
+				.containsSequence(
+						"  public static void registerProtectedParameter(GenericApplicationContext context) {",
+						"    context.registerBean(\"protectedParameter\", ProtectedParameter.class, () -> context.getBean(ProtectedMethodParameterConfiguration.class).protectedParameter(context.getBean(ProtectedType.class)));",
+						"  }");
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"protectedMethodParameterConfiguration\", ProtectedMethodParameterConfiguration.class, ProtectedMethodParameterConfiguration::new);",
+				"org.springframework.context.bootstrap.generator.sample.visibility.ContextBootstrap.registerProtectedParameter(context);");
 	}
 
 	@Test
