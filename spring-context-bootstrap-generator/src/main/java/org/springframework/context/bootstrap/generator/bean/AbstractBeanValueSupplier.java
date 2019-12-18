@@ -146,8 +146,9 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 	private void handleDependency(CodeBlock.Builder code, Parameter parameter, ResolvableType parameterType) {
 		Class<?> resolvedClass = parameterType.toClass();
 		if (resolvedClass.isAssignableFrom(ObjectProvider.class)) {
-			code.add("context.getBeanProvider($T.class)",
-					parameterType.as(ObjectProvider.class).getGeneric(0).getRawClass());
+			code.add("context.getBeanProvider(");
+			TypeHelper.generateResolvableTypeFor(code, parameterType.as(ObjectProvider.class).getGeneric(0));
+			code.add(")");
 		}
 		else if (resolvedClass.isAssignableFrom(GenericApplicationContext.class)) {
 			code.add("context");

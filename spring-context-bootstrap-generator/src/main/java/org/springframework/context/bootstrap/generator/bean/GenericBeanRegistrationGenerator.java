@@ -53,7 +53,7 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 		method.addStatement("$T $L = new RootBeanDefinition()", RootBeanDefinition.class, variable);
 		CodeBlock.Builder targetType = CodeBlock.builder();
 		targetType.add("$L.setTargetType(", variable);
-		handleGenericType(targetType, this.beanType);
+		TypeHelper.generateResolvableTypeFor(targetType, this.beanType);
 		targetType.add(")");
 		method.addStatement(targetType.build());
 		CodeBlock.Builder instanceSupplier = CodeBlock.builder();
@@ -67,23 +67,6 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 	@Override
 	public BeanValueSupplier getBeanValueSupplier() {
 		return this.beanValueSupplier;
-	}
-
-	private void handleGenericType(CodeBlock.Builder code, ResolvableType target) {
-		code.add("$T.forClassWithGenerics($T.class, ", ResolvableType.class, target.toClass());
-		for (int i = 0; i < target.getGenerics().length; i++) {
-			ResolvableType parameter = target.getGeneric(i);
-			if (parameter.hasGenerics()) {
-				handleGenericType(code, parameter);
-			}
-			else {
-				code.add("$T.class", parameter.toClass());
-			}
-			if (i < target.getGenerics().length - 1) {
-				code.add(", ");
-			}
-		}
-		code.add(")");
 	}
 
 	// rationalize

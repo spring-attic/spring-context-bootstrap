@@ -29,6 +29,7 @@ import org.springframework.context.bootstrap.generator.sample.SimpleConfiguratio
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConfiguration;
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConstructorConfiguration;
 import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
+import org.springframework.context.bootstrap.generator.sample.generic.GenericObjectProviderConfiguration;
 import org.springframework.context.bootstrap.generator.sample.infrastructure.ArgumentValueRegistrarConfiguration;
 import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedConfigurationImport;
 import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedConstructorParameterConfiguration;
@@ -179,6 +180,15 @@ class ContextBootstrapGeneratorTests {
 				"stringRepositoryHolderBeanDef.setTargetType(ResolvableType.forClassWithGenerics(RepositoryHolder.class, String.class, ResolvableType.forClassWithGenerics(Repository.class, String.class)));",
 				"stringRepositoryHolderBeanDef.setInstanceSupplier(() -> context.getBean(GenericConfiguration.class).stringRepositoryHolder(context.getBean(Repository.class)));",
 				"context.registerBeanDefinition(\"stringRepositoryHolder\", stringRepositoryHolderBeanDef);");
+	}
+
+	@Test
+	void bootstrapClassWithObjectProviderTargetGeneric() {
+		ContextBootstrapStructure structure = this.generatorTester.generate(this.contextRunner
+				.withUserConfiguration(GenericConfiguration.class, GenericObjectProviderConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"repositoryId\", String.class, () -> context.getBean(GenericObjectProviderConfiguration.class).repositoryId("
+						+ "context.getBeanProvider(ResolvableType.forClassWithGenerics(RepositoryHolder.class, String.class, ResolvableType.forClassWithGenerics(Repository.class, String.class)))));");
 	}
 
 	@Test
