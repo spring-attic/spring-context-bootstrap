@@ -19,6 +19,7 @@
 
 	<modules>
 		<module>spring-context-bootstrap-generator</module>
+		<module>spring-context-bootstrap-invoker</module>
 		<module>spring-context-bootstrap-samples</module>
 	</modules>
 
@@ -118,6 +119,11 @@
 			<dependency>
 				<groupId>org.springframwork.experimental</groupId>
 				<artifactId>spring-context-bootstrap-generator</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframwork.experimental</groupId>
+				<artifactId>spring-context-bootstrap-invoker</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

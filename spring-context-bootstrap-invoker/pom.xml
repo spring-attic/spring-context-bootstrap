@@ -5,24 +5,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframwork.experimental</groupId>
-		<artifactId>spring-context-bootstrap-samples</artifactId>
+		<artifactId>spring-context-bootstrap</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>spring-context-bootstrap-sample-generator</artifactId>
-	<name>Spring Context Bootstrap Samples (Simple App)</name>
+	<artifactId>spring-context-bootstrap-invoker</artifactId>
+	<name>Spring Context Bootstrap Invoker</name>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.springframwork.experimental</groupId>
-			<artifactId>spring-context-bootstrap-generator</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframwork.experimental</groupId>
-			<artifactId>spring-context-bootstrap-invoker</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
+			<artifactId>spring-boot-autoconfigure</artifactId>
 		</dependency>
 
 		<dependency>
@@ -37,5 +29,18 @@
 			</exclusions>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>io.spring.javaformat</groupId>
+				<artifactId>spring-javaformat-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

@@ -16,13 +16,7 @@
 
 package sample.generator;
 
-import java.util.Arrays;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.annotation.AnnotationConfigUtils;
-import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.boostrap.invoker.BootstrapApplication;
 
 /**
  * Start this application with the generated {@code ContextBootstrap.}
@@ -32,35 +26,9 @@ import org.springframework.context.support.GenericApplicationContext;
 public class BootstrapSimpleApplication {
 
 	public static void main(String[] args) {
-		SpringApplication application = new SpringApplication(BootstrapSimpleApplication.class);
-		application.setApplicationContextClass(GenericApplicationContext.class);
-		application.setInitializers(Arrays.asList(new BootstrapApplicationListener(),
-				new WorkaroundApplicationListener(), new ConditionEvaluationReportLoggingListener()));
-		application.run(args);
-	}
-
-	static class BootstrapApplicationListener implements ApplicationContextInitializer<GenericApplicationContext> {
-
-		@Override
-		public void initialize(GenericApplicationContext context) {
+		BootstrapApplication.forNonWebApplication((context) -> {
 			// new ContextBootstrap().bootstrap(context);
-		}
-
-	}
-
-	/**
-	 * At the moment the ConfigurationClassBeanPostProcessor is registered anyway by the
-	 * SpringApplication so this is an attempt to override that with something that
-	 * doesn't do anything.
-	 */
-	static class WorkaroundApplicationListener implements ApplicationContextInitializer<GenericApplicationContext> {
-
-		@Override
-		public void initialize(GenericApplicationContext context) {
-			context.registerBean(AnnotationConfigUtils.CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME, Object.class,
-					Object::new);
-		}
-
+		}).run(args);
 	}
 
 }
