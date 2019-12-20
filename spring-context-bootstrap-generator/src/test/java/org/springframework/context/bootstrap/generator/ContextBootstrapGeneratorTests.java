@@ -120,6 +120,14 @@ class ContextBootstrapGeneratorTests {
 	}
 
 	@Test
+	void bootstrapClassWithDependencyOnList() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(DependencyConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"injectList\", Integer.class, () -> context.getBean(DependencyConfiguration.class).injectList(context.getBeanProvider(String.class).orderedStream().collect(Collectors.toList())));");
+	}
+
+	@Test
 	void bootstrapClassWithPackageProtectedConfiguration() {
 		ContextBootstrapStructure structure = this.generatorTester
 				.generate(this.contextRunner.withUserConfiguration(ProtectedConfigurationImport.class));

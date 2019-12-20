@@ -16,6 +16,8 @@
 
 package org.springframework.context.bootstrap.generator.sample.dependency;
 
+import java.util.List;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -45,6 +47,11 @@ public class DependencyConfiguration {
 	@Bean
 	public String injectObjectProvider(ObjectProvider<Repository<Integer>> object) {
 		return "objectProvider";
+	}
+
+	@Bean
+	public Integer injectList(List<String> strings) {
+		return strings.size();
 	}
 
 }

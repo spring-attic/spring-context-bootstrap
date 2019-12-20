@@ -19,7 +19,9 @@ package org.springframework.context.bootstrap.generator.bean;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.squareup.javapoet.CodeBlock;
 
@@ -149,6 +151,11 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 			code.add("context.getBeanProvider(");
 			TypeHelper.generateResolvableTypeFor(code, parameterType.as(ObjectProvider.class).getGeneric(0));
 			code.add(")");
+		}
+		else if (Collection.class.isAssignableFrom(resolvedClass)) {
+			code.add("context.getBeanProvider(");
+			TypeHelper.generateResolvableTypeFor(code, parameterType.as(Collection.class).getGeneric(0));
+			code.add(").orderedStream().collect($T.toList())", Collectors.class);
 		}
 		else if (resolvedClass.isAssignableFrom(GenericApplicationContext.class)) {
 			code.add("context");
