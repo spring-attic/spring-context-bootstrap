@@ -120,10 +120,10 @@ public class ContextBootstrapGenerator {
 		BeanValueSupplier beanValueSupplier = getBeanValueSupplier(beanDefinition);
 		if (beanValueSupplier != null) {
 			if (beanType.hasGenerics()) {
-				return new GenericBeanRegistrationGenerator(beanName, beanType, beanValueSupplier);
+				return new GenericBeanRegistrationGenerator(beanName, beanDefinition, beanValueSupplier);
 			}
 			else {
-				return new SimpleBeanRegistrationGenerator(beanName, beanType, beanValueSupplier);
+				return new SimpleBeanRegistrationGenerator(beanName, beanDefinition, beanValueSupplier);
 			}
 		}
 		return null;

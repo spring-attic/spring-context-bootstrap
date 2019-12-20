@@ -21,7 +21,9 @@ import javax.lang.model.SourceVersion;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.context.bootstrap.infrastructure.BeanDefinitionCustomizers;
 import org.springframework.core.ResolvableType;
 import org.springframework.util.StringUtils;
 
@@ -35,25 +37,26 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 
 	private final String beanName;
 
-	private final ResolvableType beanType;
+	private final BeanDefinition beanDefinition;
 
 	private final BeanValueSupplier beanValueSupplier;
 
-	public GenericBeanRegistrationGenerator(String beanName, ResolvableType beanType,
+	public GenericBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition,
 			BeanValueSupplier beanValueSupplier) {
 		this.beanName = beanName;
-		this.beanType = beanType;
+		this.beanDefinition = beanDefinition;
 		this.beanValueSupplier = beanValueSupplier;
 	}
 
 	@Override
 	public void generateBeanRegistration(MethodSpec.Builder method) {
-		String beanId = getBeanIdentifier(this.beanName, this.beanType.toClass());
+		ResolvableType beanType = this.beanDefinition.getResolvableType();
+		String beanId = getBeanIdentifier(this.beanName, beanType.toClass());
 		String variable = beanId + "BeanDef";
 		method.addStatement("$T $L = new RootBeanDefinition()", RootBeanDefinition.class, variable);
 		CodeBlock.Builder targetType = CodeBlock.builder();
 		targetType.add("$L.setTargetType(", variable);
-		TypeHelper.generateResolvableTypeFor(targetType, this.beanType);
+		TypeHelper.generateResolvableTypeFor(targetType, beanType);
 		targetType.add(")");
 		method.addStatement(targetType.build());
 		CodeBlock.Builder instanceSupplier = CodeBlock.builder();
@@ -61,12 +64,28 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 		this.beanValueSupplier.handleValueSupplier(instanceSupplier);
 		instanceSupplier.add(")");
 		method.addStatement(instanceSupplier.build());
+		handleMetadata(method, variable);
 		method.addStatement("context.registerBeanDefinition($S, $L)", this.beanName, variable);
 	}
 
 	@Override
 	public BeanValueSupplier getBeanValueSupplier() {
 		return this.beanValueSupplier;
+	}
+
+	private void handleMetadata(MethodSpec.Builder method, String variable) {
+		if (this.beanDefinition.isPrimary()) {
+			method.addStatement(customization(variable, CodeBlock.builder().add("primary()")));
+		}
+		if (this.beanDefinition.getRole() != BeanDefinition.ROLE_APPLICATION) {
+			method.addStatement(
+					customization(variable, CodeBlock.builder().add("role($L)", this.beanDefinition.getRole())));
+		}
+	}
+
+	private CodeBlock customization(String variable, CodeBlock.Builder customizerMethod) {
+		return CodeBlock.builder().add("$T.", BeanDefinitionCustomizers.class).add(customizerMethod.build())
+				.add(".customize($L)", variable).build();
 	}
 
 	// rationalize

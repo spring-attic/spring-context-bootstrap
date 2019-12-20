@@ -19,7 +19,8 @@ package org.springframework.context.bootstrap.generator.bean;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec.Builder;
 
-import org.springframework.core.ResolvableType;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.bootstrap.infrastructure.BeanDefinitionCustomizers;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -31,14 +32,14 @@ public class SimpleBeanRegistrationGenerator implements BeanRegistrationGenerato
 
 	private final String beanName;
 
-	private final ResolvableType beanType;
+	private final BeanDefinition beanDefinition;
 
 	private final BeanValueSupplier beanValueSupplier;
 
-	public SimpleBeanRegistrationGenerator(String beanName, ResolvableType beanType,
+	public SimpleBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition,
 			BeanValueSupplier beanValueSupplier) {
 		this.beanName = beanName;
-		this.beanType = beanType;
+		this.beanDefinition = beanDefinition;
 		this.beanValueSupplier = beanValueSupplier;
 	}
 
@@ -46,10 +47,20 @@ public class SimpleBeanRegistrationGenerator implements BeanRegistrationGenerato
 	public void generateBeanRegistration(Builder method) {
 		CodeBlock.Builder code = CodeBlock.builder();
 		code.add("context.registerBean($S, $T.class, ", this.beanName,
-				ClassUtils.getUserClass(this.beanType.toClass()));
+				ClassUtils.getUserClass(this.beanDefinition.getResolvableType().toClass()));
 		this.beanValueSupplier.handleValueSupplier(code);
+		handleBeanMetadata(code);
 		code.add(")"); // End of registerBean
 		method.addStatement(code.build());
+	}
+
+	private void handleBeanMetadata(CodeBlock.Builder code) {
+		if (this.beanDefinition.isPrimary()) {
+			code.add(", $T.primary()", BeanDefinitionCustomizers.class);
+		}
+		if (this.beanDefinition.getRole() != BeanDefinition.ROLE_APPLICATION) {
+			code.add(", $T.role($L)", BeanDefinitionCustomizers.class, this.beanDefinition.getRole());
+		}
 	}
 
 	@Override

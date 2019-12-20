@@ -32,6 +32,7 @@ import org.springframework.context.bootstrap.generator.sample.exception.Exceptio
 import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
 import org.springframework.context.bootstrap.generator.sample.generic.GenericObjectProviderConfiguration;
 import org.springframework.context.bootstrap.generator.sample.infrastructure.ArgumentValueRegistrarConfiguration;
+import org.springframework.context.bootstrap.generator.sample.metadata.MetadataConfiguration;
 import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedConfigurationImport;
 import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedConstructorParameterConfiguration;
 import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedMethodParameterConfiguration;
@@ -128,6 +129,22 @@ class ContextBootstrapGeneratorTests {
 	}
 
 	@Test
+	void bootstrapClassWithPrimaryBean() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(MetadataConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"primaryBean\", String.class, () -> context.getBean(MetadataConfiguration.class).primaryBean(), BeanDefinitionCustomizers.primary());");
+	}
+
+	@Test
+	void bootstrapClassWithRoleInfrastructureBean() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(MetadataConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"infrastructureBean\", String.class, () -> context.getBean(MetadataConfiguration.class).infrastructureBean(), BeanDefinitionCustomizers.role(2));");
+	}
+
+	@Test
 	void bootstrapClassWithPackageProtectedConfiguration() {
 		ContextBootstrapStructure structure = this.generatorTester
 				.generate(this.contextRunner.withUserConfiguration(ProtectedConfigurationImport.class));
@@ -221,6 +238,30 @@ class ContextBootstrapGeneratorTests {
 				"stringRepositoryHolderBeanDef.setTargetType(ResolvableType.forClassWithGenerics(RepositoryHolder.class, String.class, ResolvableType.forClassWithGenerics(Repository.class, String.class)));",
 				"stringRepositoryHolderBeanDef.setInstanceSupplier(() -> context.getBean(GenericConfiguration.class).stringRepositoryHolder(context.getBean(Repository.class)));",
 				"context.registerBeanDefinition(\"stringRepositoryHolder\", stringRepositoryHolderBeanDef);");
+	}
+
+	@Test
+	void bootstrapClassWithPrimaryGenericBean() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(MetadataConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"RootBeanDefinition primaryGenericBeanBeanDef = new RootBeanDefinition();",
+				"primaryGenericBeanBeanDef.setTargetType(ResolvableType.forClassWithGenerics(Repository.class, String.class));",
+				"primaryGenericBeanBeanDef.setInstanceSupplier(() -> context.getBean(MetadataConfiguration.class).primaryGenericBean());",
+				"BeanDefinitionCustomizers.primary().customize(primaryGenericBeanBeanDef);",
+				"context.registerBeanDefinition(\"primaryGenericBean\", primaryGenericBeanBeanDef);");
+	}
+
+	@Test
+	void bootstrapClassWithRoleInfrastructureGenericBean() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(MetadataConfiguration.class));
+		assertThat(structure).contextBootstrap().contains(
+				"RootBeanDefinition infrastructureGenericBeanBeanDef = new RootBeanDefinition();",
+				"infrastructureGenericBeanBeanDef.setTargetType(ResolvableType.forClassWithGenerics(Repository.class, String.class));",
+				"infrastructureGenericBeanBeanDef.setInstanceSupplier(() -> context.getBean(MetadataConfiguration.class).infrastructureGenericBean());",
+				"BeanDefinitionCustomizers.role(2).customize(infrastructureGenericBeanBeanDef);",
+				"context.registerBeanDefinition(\"infrastructureGenericBean\", infrastructureGenericBeanBeanDef);");
 	}
 
 	@Test
