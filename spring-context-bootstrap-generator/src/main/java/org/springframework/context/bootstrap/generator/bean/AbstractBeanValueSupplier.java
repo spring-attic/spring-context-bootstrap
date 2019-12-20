@@ -23,13 +23,13 @@ import java.util.function.Function;
 
 import com.squareup.javapoet.CodeBlock;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.ResolvableType;
-import org.springframework.core.env.Environment;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -145,7 +145,7 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 
 	private void handleDependency(CodeBlock.Builder code, Parameter parameter, ResolvableType parameterType) {
 		Class<?> resolvedClass = parameterType.toClass();
-		if (resolvedClass.isAssignableFrom(ObjectProvider.class)) {
+		if (ObjectProvider.class.isAssignableFrom(resolvedClass)) {
 			code.add("context.getBeanProvider(");
 			TypeHelper.generateResolvableTypeFor(code, parameterType.as(ObjectProvider.class).getGeneric(0));
 			code.add(")");
@@ -153,10 +153,10 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 		else if (resolvedClass.isAssignableFrom(GenericApplicationContext.class)) {
 			code.add("context");
 		}
-		else if (resolvedClass.isAssignableFrom(BeanFactory.class)) {
+		else if (resolvedClass.isAssignableFrom(ConfigurableListableBeanFactory.class)) {
 			code.add("context.getBeanFactory()");
 		}
-		else if (resolvedClass.isAssignableFrom(Environment.class)) {
+		else if (resolvedClass.isAssignableFrom(ConfigurableEnvironment.class)) {
 			code.add("context.getEnvironment()");
 		}
 		else {
