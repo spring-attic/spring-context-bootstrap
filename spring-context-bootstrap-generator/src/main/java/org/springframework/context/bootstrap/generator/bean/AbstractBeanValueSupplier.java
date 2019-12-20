@@ -57,25 +57,27 @@ public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
 
 	@Override
 	public boolean isAccessibleFrom(String packageName) {
-		return isPublicClass(this.type) && isPublicClass(getDeclaringType());
+		return isAccessible(this.beanDefinition.getResolvableType())
+				&& isAccessible(ResolvableType.forClass(getDeclaringType()));
 	}
 
-	protected boolean isPublicClass(Class<?> target) {
-		boolean publicClass = Modifier.isPublic(target.getModifiers());
-		if (!publicClass) {
+	protected boolean isAccessible(ResolvableType target) {
+		// resolve to the actual class as the proxy won't have the same characteristics
+		ResolvableType nonProxyTarget = target.as(ClassUtils.getUserClass(target.toClass()));
+		if (!Modifier.isPublic(nonProxyTarget.toClass().getModifiers())) {
 			return false;
 		}
-		Class<?> declaringClass = target.getDeclaringClass();
-		if (declaringClass == null) {
-			return true;
-		}
-		return isPublicClass(declaringClass);
-	}
-
-	protected boolean areAllPublicClasses(Class<?>... parameterTypes) {
-		for (Class<?> parameterType : parameterTypes) {
-			if (!isPublicClass(parameterType)) {
+		Class<?> declaringClass = nonProxyTarget.toClass().getDeclaringClass();
+		if (declaringClass != null) {
+			if (!isAccessible(ResolvableType.forClass(declaringClass))) {
 				return false;
+			}
+		}
+		if (nonProxyTarget.hasGenerics()) {
+			for (ResolvableType generic : nonProxyTarget.getGenerics()) {
+				if (!isAccessible(generic)) {
+					return false;
+				}
 			}
 		}
 		return true;

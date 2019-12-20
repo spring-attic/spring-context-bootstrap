@@ -16,6 +16,7 @@
 
 package org.springframework.context.bootstrap.generator.sample.visibility;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,6 +31,11 @@ public class ProtectedMethodParameterConfiguration {
 	@Bean
 	public ProtectedParameter protectedParameter(ProtectedType protectedType) {
 		return new ProtectedParameter(protectedType);
+	}
+
+	@Bean
+	public ProtectedParameter protectedGenericParameter(ObjectProvider<ProtectedType> protectedType) {
+		return new ProtectedParameter(protectedType.getIfAvailable());
 	}
 
 }

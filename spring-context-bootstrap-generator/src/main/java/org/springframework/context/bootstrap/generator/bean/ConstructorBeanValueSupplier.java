@@ -48,7 +48,16 @@ public class ConstructorBeanValueSupplier extends AbstractBeanValueSupplier {
 	@Override
 	public boolean isAccessibleFrom(String packageName) {
 		return super.isAccessibleFrom(packageName) && Modifier.isPublic(this.constructor.getModifiers())
-				&& areAllPublicClasses(this.constructor.getParameterTypes());
+				&& !hasConstructorParameterInaccessible();
+	}
+
+	private boolean hasConstructorParameterInaccessible() {
+		for (int i = 0; i < this.constructor.getParameterCount(); i++) {
+			if (!isAccessible(ResolvableType.forConstructorParameter(this.constructor, i))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

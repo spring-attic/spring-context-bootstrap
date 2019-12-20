@@ -219,6 +219,21 @@ class ContextBootstrapGeneratorTests {
 	}
 
 	@Test
+	void bootstrapClassWithProtectedMethodGenericParameter() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(ProtectedMethodParameterConfiguration.class));
+		assertThat(structure)
+				.source("org.springframework.context.bootstrap.generator.sample.visibility", "ContextBootstrap").lines()
+				.containsSequence(
+						"  public static void registerProtectedGenericParameter(GenericApplicationContext context) {",
+						"    context.registerBean(\"protectedGenericParameter\", ProtectedParameter.class, () -> context.getBean(ProtectedMethodParameterConfiguration.class).protectedGenericParameter(context.getBeanProvider(ProtectedType.class)));",
+						"  }");
+		assertThat(structure).contextBootstrap().contains(
+				"context.registerBean(\"protectedMethodParameterConfiguration\", ProtectedMethodParameterConfiguration.class, ProtectedMethodParameterConfiguration::new);",
+				"org.springframework.context.bootstrap.generator.sample.visibility.ContextBootstrap.registerProtectedGenericParameter(context);");
+	}
+
+	@Test
 	void bootstrapClassWithSimpleGeneric() {
 		ContextBootstrapStructure structure = this.generatorTester
 				.generate(this.contextRunner.withUserConfiguration(GenericConfiguration.class));

@@ -47,7 +47,16 @@ public class MethodBeanValueSupplier extends AbstractBeanValueSupplier {
 	@Override
 	public boolean isAccessibleFrom(String packageName) {
 		return super.isAccessibleFrom(packageName) && Modifier.isPublic(this.method.getModifiers())
-				&& areAllPublicClasses(this.method.getParameterTypes());
+				&& !hasMethodParameterInaccessible();
+	}
+
+	private boolean hasMethodParameterInaccessible() {
+		for (int i = 0; i < this.method.getParameterCount(); i++) {
+			if (!isAccessible(ResolvableType.forMethodParameter(this.method, i))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
