@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package sample.generator.webflux;
+package sample.generator.webmvc;
 
 import org.springframework.context.boostrap.invoker.BootstrapApplication;
 
@@ -23,7 +23,7 @@ import org.springframework.context.boostrap.invoker.BootstrapApplication;
  *
  * @author Stephane Nicoll
  */
-public class BootstrapWebFluxApplication {
+public class BootstrapWebMvcApplication {
 
 	public static void main(String[] args) {
 		BootstrapApplication.forReactiveWebApplication((context) -> {

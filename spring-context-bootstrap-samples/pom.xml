@@ -15,6 +15,7 @@
 	<modules>
 		<module>spring-context-bootstrap-sample-generator</module>
 		<module>spring-context-bootstrap-sample-generator-webflux</module>
+		<module>spring-context-bootstrap-sample-generator-webmvc</module>
 	</modules>
 
 	<build>

@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package sample.generator.webflux;
+package sample.generator.webmvc;
 
-import org.springframework.context.boostrap.invoker.BootstrapApplication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Start this application with the generated {@code ContextBootstrap.}
- *
- * @author Stephane Nicoll
- */
-public class BootstrapWebFluxApplication {
+@RestController
+public class TestController {
 
-	public static void main(String[] args) {
-		BootstrapApplication.forReactiveWebApplication((context) -> {
-			// new ContextBootstrap().bootstrap(context);
-		}).run(args);
+	@GetMapping("/test")
+	public String test() {
+		return "test";
 	}
 
 }

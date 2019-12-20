@@ -21,6 +21,7 @@ import java.util.Arrays;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.annotation.AnnotationConfigUtils;
@@ -56,9 +57,14 @@ public final class BootstrapApplication<C extends GenericApplicationContext> {
 		return new BootstrapApplication<>(GenericApplicationContext.class, bootstraper);
 	}
 
-	public static BootstrapApplication<ReactiveWebServerApplicationContext> forWebFluxApplication(
+	public static BootstrapApplication<ReactiveWebServerApplicationContext> forReactiveWebApplication(
 			ApplicationContextInitializer<ReactiveWebServerApplicationContext> bootstraper) {
 		return new BootstrapApplication<>(ReactiveWebServerApplicationContext.class, bootstraper);
+	}
+
+	public static BootstrapApplication<ServletWebServerApplicationContext> forServletWebApplication(
+			ApplicationContextInitializer<ServletWebServerApplicationContext> bootstraper) {
+		return new BootstrapApplication<>(ServletWebServerApplicationContext.class, bootstraper);
 	}
 
 	/**
