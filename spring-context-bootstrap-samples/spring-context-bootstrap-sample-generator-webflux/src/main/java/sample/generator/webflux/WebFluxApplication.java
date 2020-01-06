@@ -39,7 +39,7 @@ public class WebFluxApplication {
 	private static void startRegularApp(String[] args) throws IOException {
 		ConfigurableApplicationContext context = SpringApplication.run(WebFluxApplication.class, args);
 		List<JavaFile> javaFiles = new ContextBootstrapGenerator().generateBootstrapClass(context.getBeanFactory(),
-				"sample.generator.webflux");
+				"sample.generator.webflux", WebFluxApplication.class);
 		// In IntelliJ IDEA, make sure that "working directory" is set to $MODULE_DIR$
 		Path srcDirectory = FileSystems.getDefault().getPath(".").resolve("src/main/java");
 		for (JavaFile javaFile : javaFiles) {

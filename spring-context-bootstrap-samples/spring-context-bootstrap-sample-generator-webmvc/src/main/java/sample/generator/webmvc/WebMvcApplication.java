@@ -39,7 +39,7 @@ public class WebMvcApplication {
 	private static void startRegularApp(String[] args) throws IOException {
 		ConfigurableApplicationContext context = SpringApplication.run(WebMvcApplication.class, args);
 		List<JavaFile> javaFiles = new ContextBootstrapGenerator().generateBootstrapClass(context.getBeanFactory(),
-				"sample.generator.webmvc");
+				"sample.generator.webmvc", WebMvcApplication.class);
 		// In IntelliJ IDEA, make sure that "working directory" is set to $MODULE_DIR$
 		Path srcDirectory = FileSystems.getDefault().getPath(".").resolve("src/main/java");
 		for (JavaFile javaFile : javaFiles) {
