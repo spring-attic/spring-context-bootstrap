@@ -21,9 +21,11 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.Modifier;
 
@@ -60,18 +62,23 @@ public class ContextBootstrapGenerator {
 
 	private static final Log logger = LogFactory.getLog(ContextBootstrapGenerator.class);
 
-	private final BeanDefinitionSelector selector;
-
 	private final Map<String, ProtectedBootstrapClass> protectedBootstrapClasses = new HashMap<>();
 
-	public ContextBootstrapGenerator() {
-		this.selector = new DefaultBeanDefinitionSelector();
-	}
-
-	public List<JavaFile> generateBootstrapClass(ConfigurableListableBeanFactory beanFactory, String packageName) {
+	/**
+	 * Generate the code that is required to restore the state of the specified
+	 * {@link BeanFactory}.
+	 * @param beanFactory the bean factory state to replicate in code
+	 * @param packageName the root package for the main {@code ContextBoostrap} class
+	 * @param excludeTypes the types to exclude
+	 * @return a list of {@linkplain JavaFile java source files}
+	 */
+	public List<JavaFile> generateBootstrapClass(ConfigurableListableBeanFactory beanFactory, String packageName,
+			Class<?>... excludeTypes) {
+		DefaultBeanDefinitionSelector selector = new DefaultBeanDefinitionSelector(
+				Arrays.stream(excludeTypes).map(Class::getName).collect(Collectors.toList()));
 		List<JavaFile> bootstrapClasses = new ArrayList<>();
-		bootstrapClasses
-				.add(createClass(packageName, "ContextBootstrap", generateBootstrapMethod(beanFactory, packageName)));
+		bootstrapClasses.add(createClass(packageName, "ContextBootstrap",
+				generateBootstrapMethod(beanFactory, packageName, selector)));
 		for (ProtectedBootstrapClass protectedBootstrapClass : this.protectedBootstrapClasses.values()) {
 			bootstrapClasses.add(protectedBootstrapClass.build());
 		}
@@ -83,13 +90,14 @@ public class ContextBootstrapGenerator {
 				.addMethod(bootstrapMethod).build()).build();
 	}
 
-	public MethodSpec generateBootstrapMethod(ConfigurableListableBeanFactory beanFactory, String packageName) {
+	public MethodSpec generateBootstrapMethod(ConfigurableListableBeanFactory beanFactory, String packageName,
+			BeanDefinitionSelector selector) {
 		MethodSpec.Builder method = MethodSpec.methodBuilder("bootstrap").addModifiers(Modifier.PUBLIC)
 				.addParameter(GenericApplicationContext.class, "context");
 		String[] beanNames = beanFactory.getBeanDefinitionNames();
 		for (String beanName : beanNames) {
 			BeanDefinition beanDefinition = beanFactory.getMergedBeanDefinition(beanName);
-			if (this.selector.select(beanDefinition)) {
+			if (selector.select(beanDefinition)) {
 				BeanRegistrationGenerator beanRegistrationGenerator = getBeanRegistrationGenerator(beanName,
 						beanDefinition);
 				if (beanRegistrationGenerator != null) {

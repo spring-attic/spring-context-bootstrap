@@ -16,25 +16,31 @@
 
 package org.springframework.context.bootstrap.generator;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.util.ClassUtils;
 
 /**
- * A selector that discard the {@link BeanDefinition} instances the bootstrap class is
+ * A selector that discard {@link BeanDefinition} instances the bootstrap class is
  * replacing.
  *
  * @author Stephane Nicoll
  */
 public class DefaultBeanDefinitionSelector implements BeanDefinitionSelector {
 
-	private static final List<String> BEAN_POST_PROCESSOR_CLASS_NAME = Arrays
-			.asList("org.springframework.context.annotation.ConfigurationClassPostProcessor");
+	private final List<String> excludeTypes;
+
+	public DefaultBeanDefinitionSelector(List<String> excludeTypes) {
+		this.excludeTypes = new ArrayList<>(excludeTypes);
+		this.excludeTypes.add("org.springframework.context.annotation.ConfigurationClassPostProcessor");
+	}
 
 	@Override
 	public Boolean select(BeanDefinition beanDefinition) {
-		return !BEAN_POST_PROCESSOR_CLASS_NAME.contains(beanDefinition.getResolvableType().toClass().getName());
+		String target = ClassUtils.getUserClass(beanDefinition.getResolvableType().toClass()).getName();
+		return !this.excludeTypes.contains(target);
 	}
 
 }
