@@ -26,14 +26,18 @@ import com.squareup.javapoet.JavaFile;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.boostrap.invoker.BootstrapApplication;
 import org.springframework.context.bootstrap.generator.ContextBootstrapGenerator;
 
 @SpringBootApplication
 public class SimpleApplication {
 
 	public static void main(String[] args) throws IOException {
-		ConfigurableApplicationContext context = SpringApplication.run(SimpleApplication.class, args);
+		startRegularApp(args);
+	}
 
+	private static void startRegularApp(String[] args) throws IOException {
+		ConfigurableApplicationContext context = SpringApplication.run(SimpleApplication.class, args);
 		List<JavaFile> javaFiles = new ContextBootstrapGenerator().generateBootstrapClass(context.getBeanFactory(),
 				"sample.generator");
 		// In IntelliJ IDEA, make sure that "working directory" is set to $MODULE_DIR$
@@ -41,6 +45,12 @@ public class SimpleApplication {
 		for (JavaFile javaFile : javaFiles) {
 			javaFile.writeTo(srcDirectory);
 		}
+	}
+
+	private static void startWithBootstrap(String[] args) {
+		BootstrapApplication.forNonWebApplication((context) -> {
+			// new ContextBootstrap().bootstrap(context);
+		}).run(args);
 	}
 
 }
