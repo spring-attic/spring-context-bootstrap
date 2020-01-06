@@ -26,7 +26,7 @@ import org.springframework.context.boostrap.invoker.BootstrapApplication;
 public class BootstrapWebMvcApplication {
 
 	public static void main(String[] args) {
-		BootstrapApplication.forReactiveWebApplication((context) -> {
+		BootstrapApplication.forServletWebApplication((context) -> {
 			// new ContextBootstrap().bootstrap(context);
 		}).run(args);
 	}
