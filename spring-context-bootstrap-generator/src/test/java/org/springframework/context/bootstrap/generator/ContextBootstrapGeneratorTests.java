@@ -31,6 +31,8 @@ import org.springframework.context.bootstrap.generator.sample.exception.Exceptio
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConstructorConfiguration;
 import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
 import org.springframework.context.bootstrap.generator.sample.generic.GenericObjectProviderConfiguration;
+import org.springframework.context.bootstrap.generator.sample.generic.Repository;
+import org.springframework.context.bootstrap.generator.sample.generic.RepositoryHolder;
 import org.springframework.context.bootstrap.generator.sample.infrastructure.ArgumentValueRegistrarConfiguration;
 import org.springframework.context.bootstrap.generator.sample.metadata.MetadataConfiguration;
 import org.springframework.context.bootstrap.generator.sample.visibility.ProtectedConfigurationImport;
@@ -310,6 +312,15 @@ class ContextBootstrapGeneratorTests {
 				.generate(this.contextRunner.withUserConfiguration(ExceptionConstructorConfiguration.class));
 		assertThat(structure).contextBootstrap().contains(
 				"context.registerBean(\"exceptionConstructorConfiguration\", ExceptionConstructorConfiguration.class, ExceptionHandler.wrapException(ExceptionConstructorConfiguration::new));");
+	}
+
+	@Test
+	void bootstrapClassWithExcludeDoesNotRegisterExcludedType() {
+		ContextBootstrapStructure structure = this.generatorTester.withExcludeTypes(RepositoryHolder.class)
+				.generate(this.contextRunner.withUserConfiguration(Repository.class, RepositoryHolder.class));
+		assertThat(structure).contextBootstrap()
+				.contains("context.registerBeanDefinition(\"repository\", repositoryBeanDef);")
+				.doesNotContain("RepositoryHolder");
 	}
 
 }
