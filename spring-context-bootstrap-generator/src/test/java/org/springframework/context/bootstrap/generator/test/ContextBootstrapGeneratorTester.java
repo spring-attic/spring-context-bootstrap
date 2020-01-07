@@ -19,12 +19,15 @@ package org.springframework.context.bootstrap.generator.test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.squareup.javapoet.JavaFile;
 
 import org.springframework.boot.test.context.runner.AbstractApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.ContextBootstrapGenerator;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A tester for {@link ContextBootstrapGenerator}.
@@ -37,20 +40,36 @@ public class ContextBootstrapGeneratorTester {
 
 	private final String packageName;
 
-	public ContextBootstrapGeneratorTester(Path directory, String packageName) {
+	private final List<Class<?>> excludeTypes;
+
+	public ContextBootstrapGeneratorTester(Path directory, String packageName, List<Class<?>> excludeTypes) {
 		this.directory = directory;
 		this.packageName = packageName;
+		this.excludeTypes = (!ObjectUtils.isEmpty(excludeTypes)) ? new ArrayList<>(excludeTypes) : new ArrayList<>();
 	}
 
 	public ContextBootstrapGeneratorTester(Path directory) {
-		this(directory, "com.example");
+		this(directory, "com.example", null);
+	}
+
+	public ContextBootstrapGeneratorTester withDirectory(Path directory) {
+		return new ContextBootstrapGeneratorTester(directory, this.packageName, this.excludeTypes);
+	}
+
+	public ContextBootstrapGeneratorTester withPackage(String packageName) {
+		return new ContextBootstrapGeneratorTester(this.directory, packageName, this.excludeTypes);
+	}
+
+	public ContextBootstrapGeneratorTester withExcludeTypes(Class<?>... excludeTypes) {
+		return new ContextBootstrapGeneratorTester(this.directory, this.packageName, Arrays.asList(excludeTypes));
 	}
 
 	public ContextBootstrapStructure generate(AbstractApplicationContextRunner<?, ?, ?> runner) {
 		Path srcDirectory = generateSrcDirectory();
 		runner.run((context) -> {
-			List<JavaFile> javaFiles = new ContextBootstrapGenerator()
-					.generateBootstrapClass(context.getSourceApplicationContext().getBeanFactory(), this.packageName);
+			List<JavaFile> javaFiles = new ContextBootstrapGenerator().generateBootstrapClass(
+					context.getSourceApplicationContext().getBeanFactory(), this.packageName,
+					this.excludeTypes.toArray(new Class<?>[0]));
 			writeSources(srcDirectory, javaFiles);
 		});
 		return new ContextBootstrapStructure(srcDirectory, this.packageName);
