@@ -49,7 +49,6 @@ import org.springframework.context.bootstrap.generator.bean.MethodBeanValueSuppl
 import org.springframework.context.bootstrap.generator.bean.SimpleBeanRegistrationGenerator;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.ResolvableType;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -139,7 +138,6 @@ public class ContextBootstrapGenerator {
 
 	private BeanValueSupplier getBeanValueSupplier(BeanDefinition beanDefinition) {
 		// Remove CGLIB classes
-		Class<?> type = ClassUtils.getUserClass(beanDefinition.getResolvableType().getRawClass());
 		if (beanDefinition instanceof RootBeanDefinition) {
 			Executable factoryExecutable = getField(beanDefinition, "resolvedConstructorOrFactoryMethod",
 					Executable.class);
