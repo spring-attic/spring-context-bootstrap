@@ -17,6 +17,8 @@
 package org.springframework.context.boostrap.invoker;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener;
@@ -24,8 +26,8 @@ import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicatio
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.io.ResourceLoader;
 
 /**
  * A helper class that bootstraps an application using a {@code BootstrapContext}.
@@ -45,10 +47,9 @@ public final class BootstrapApplication<C extends GenericApplicationContext> {
 	}
 
 	public void run(String[] args) {
-		SpringApplication application = new SpringApplication(BootstrapApplication.class);
+		SpringApplication application = new BootstrapSpringApplication();
 		application.setApplicationContextClass(this.contextClass);
-		application.setInitializers(Arrays.asList(this.bootstraper, new WorkaroundApplicationListener(),
-				new ConditionEvaluationReportLoggingListener()));
+		application.setInitializers(Arrays.asList(this.bootstraper, new ConditionEvaluationReportLoggingListener()));
 		application.run(args);
 	}
 
@@ -68,16 +69,28 @@ public final class BootstrapApplication<C extends GenericApplicationContext> {
 	}
 
 	/**
-	 * At the moment the ConfigurationClassBeanPostProcessor is registered anyway by the
-	 * SpringApplication so this is an attempt to override that with something that
-	 * doesn't do anything.
+	 * An extension of {@link SpringApplication} that does not handle primary sources at
+	 * all.
 	 */
-	static class WorkaroundApplicationListener implements ApplicationContextInitializer<GenericApplicationContext> {
+	static class BootstrapSpringApplication extends SpringApplication {
+
+		BootstrapSpringApplication() {
+			super((ResourceLoader) null, Object.class);
+		}
 
 		@Override
-		public void initialize(GenericApplicationContext context) {
-			context.registerBean(AnnotationConfigUtils.CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME, Object.class,
-					Object::new);
+		public void addPrimarySources(Collection<Class<?>> additionalPrimarySources) {
+			throw new UnsupportedOperationException("Sources can't be set.");
+		}
+
+		@Override
+		public void setSources(Set<String> sources) {
+			throw new UnsupportedOperationException("Sources can't be set.");
+		}
+
+		@Override
+		protected void load(ApplicationContext context, Object[] sources) {
+			// this effectively ignore any source that was registered.
 		}
 
 	}
