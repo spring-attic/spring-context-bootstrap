@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import org.springframework.context.bootstrap.generator.bean.ConstructorBeanValue
 import org.springframework.context.bootstrap.generator.bean.GenericBeanRegistrationGenerator;
 import org.springframework.context.bootstrap.generator.bean.MethodBeanValueSupplier;
 import org.springframework.context.bootstrap.generator.bean.SimpleBeanRegistrationGenerator;
+import org.springframework.context.bootstrap.generator.processor.event.EventListenerProcessor;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.util.ReflectionUtils;
@@ -119,6 +120,8 @@ public class ContextBootstrapGenerator {
 				}
 			}
 		}
+		// Event listeners
+		new EventListenerProcessor(beanFactory).registerEventListeners(method);
 		return method.build();
 	}
 

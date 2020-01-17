@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
 import org.springframework.context.bootstrap.generator.sample.dependency.DependencyConfiguration;
+import org.springframework.context.bootstrap.generator.sample.event.TestEventListener;
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConfiguration;
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConstructorConfiguration;
 import org.springframework.context.bootstrap.generator.sample.generic.GenericConfiguration;
@@ -321,6 +322,22 @@ class ContextBootstrapGeneratorTests {
 		assertThat(structure).contextBootstrap()
 				.contains("context.registerBeanDefinition(\"repository\", repositoryBeanDef);")
 				.doesNotContain("RepositoryHolder");
+	}
+
+	@Test
+	void bootstrapClassWithEventListener() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(TestEventListener.class));
+		assertThat(structure).contextBootstrap().contains(
+				"EventListenerRegistrar eventListenerRegistrar = new EventListenerRegistrar();",
+				"eventListenerRegistrar.register(context, EventListenerMetadata.forAnnotatedMethod(\"testEventListener\", TestEventListener.class,",
+				"\"onEvent\", ApplicationEvent.class))", "\"onRefresh\"))");
+	}
+
+	@Test
+	void bootstrapClassWithWithNoEventListener() {
+		ContextBootstrapStructure structure = this.generatorTester.generate(this.contextRunner);
+		assertThat(structure).contextBootstrap().doesNotContain("EventListenerRegistrar");
 	}
 
 }
