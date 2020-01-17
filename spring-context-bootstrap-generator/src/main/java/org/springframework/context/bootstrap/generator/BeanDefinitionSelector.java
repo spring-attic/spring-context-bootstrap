@@ -27,11 +27,11 @@ import org.springframework.beans.factory.config.BeanDefinition;
 public interface BeanDefinitionSelector {
 
 	/**
-	 * Determine if the specified {@link BeanDefinition} should be added to the generated
-	 * bootstrap class.
+	 * Determine if the specified bean should be added to the generated bootstrap class.
+	 * @param beanName the bean name to consider
 	 * @param beanDefinition the bean definition to consider
 	 * @return {@code true} if it should be selected
 	 */
-	Boolean select(BeanDefinition beanDefinition);
+	Boolean select(String beanName, BeanDefinition beanDefinition);
 
 }

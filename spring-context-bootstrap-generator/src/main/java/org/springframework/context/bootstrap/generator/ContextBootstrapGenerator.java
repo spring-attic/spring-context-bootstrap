@@ -96,7 +96,7 @@ public class ContextBootstrapGenerator {
 		String[] beanNames = beanFactory.getBeanDefinitionNames();
 		for (String beanName : beanNames) {
 			BeanDefinition beanDefinition = beanFactory.getMergedBeanDefinition(beanName);
-			if (selector.select(beanDefinition)) {
+			if (selector.select(beanName, beanDefinition)) {
 				BeanRegistrationGenerator beanRegistrationGenerator = getBeanRegistrationGenerator(beanName,
 						beanDefinition);
 				if (beanRegistrationGenerator != null) {

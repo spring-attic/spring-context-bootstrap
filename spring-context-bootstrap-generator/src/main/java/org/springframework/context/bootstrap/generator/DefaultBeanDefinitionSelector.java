@@ -17,9 +17,12 @@
 package org.springframework.context.bootstrap.generator;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -32,15 +35,18 @@ public class DefaultBeanDefinitionSelector implements BeanDefinitionSelector {
 
 	private final List<String> excludeTypes;
 
+	private final Set<String> excludedBeanNames;
+
 	public DefaultBeanDefinitionSelector(List<String> excludeTypes) {
 		this.excludeTypes = new ArrayList<>(excludeTypes);
-		this.excludeTypes.add("org.springframework.context.annotation.ConfigurationClassPostProcessor");
+		this.excludedBeanNames = new HashSet<>();
+		this.excludedBeanNames.add(AnnotationConfigUtils.CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME);
 	}
 
 	@Override
-	public Boolean select(BeanDefinition beanDefinition) {
+	public Boolean select(String beanName, BeanDefinition beanDefinition) {
 		String target = ClassUtils.getUserClass(beanDefinition.getResolvableType().toClass()).getName();
-		return !this.excludeTypes.contains(target);
+		return !this.excludedBeanNames.contains(beanName) && !this.excludeTypes.contains(target);
 	}
 
 }
