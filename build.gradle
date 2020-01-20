@@ -1,0 +1,57 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven { url 'https://repo.spring.io/plugins-release' }
+	}
+	dependencies {
+		classpath "io.spring.javaformat:spring-javaformat-gradle-plugin:$javaFormatVersion"
+	}
+}
+
+plugins {
+	id 'org.springframework.boot' version '2.3.0.BUILD-SNAPSHOT' apply false
+	id "io.spring.dependency-management" version "1.0.9.RELEASE"
+}
+
+subprojects {
+	group 'org.springframwork.experimental'
+	version = '0.0.1-SNAPSHOT'
+
+	apply plugin: 'checkstyle'
+	apply plugin: 'java'
+	apply plugin: 'io.spring.dependency-management'
+	apply plugin: 'io.spring.javaformat'
+	
+	repositories {
+		mavenCentral()
+		maven { url 'https://repo.spring.io/milestone' }
+		maven { url 'https://repo.spring.io/snapshot' }
+	}
+
+	checkstyle {
+		configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+		configProperties = [ 'checkstyle.config.dir' : rootProject.file('config/checkstyle') ]
+		toolVersion = '8.25'
+	}
+
+	compileJava {
+		sourceCompatibility = 1.8
+		targetCompatibility = 1.8
+	}
+
+	dependencies {
+		checkstyle "io.spring.javaformat:spring-javaformat-checkstyle:$javaFormatVersion"
+	}
+
+	dependencyManagement {
+		imports {
+			mavenBom("org.springframework.boot:spring-boot-dependencies:2.3.0.BUILD-SNAPSHOT")
+		}
+		dependencies {
+			dependency 'com.squareup:javapoet:1.11.1'
+		}
+	}
+
+
+
+}

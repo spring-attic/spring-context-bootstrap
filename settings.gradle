@@ -1,0 +1,23 @@
+pluginManagement {
+	repositories {
+		maven { url 'https://repo.spring.io/milestone' }
+		maven { url 'https://repo.spring.io/snapshot' }
+		gradlePluginPortal()
+	}
+	resolutionStrategy {
+		eachPlugin {
+			if (requested.id.id == 'org.springframework.boot') {
+				useModule("org.springframework.boot:spring-boot-gradle-plugin:${requested.version}")
+			}
+		}
+	}
+}
+
+rootProject.name = 'spring-context-bootstrap'
+
+include 'spring-context-bootstrap-generator'
+include 'spring-context-bootstrap-invoker'
+include 'spring-context-bootstrap-samples:spring-context-bootstrap-sample-generator'
+include 'spring-context-bootstrap-samples:spring-context-bootstrap-sample-generator-webflux'
+include 'spring-context-bootstrap-samples:spring-context-bootstrap-sample-generator-webmvc'
+

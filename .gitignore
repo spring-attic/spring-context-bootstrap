@@ -2,8 +2,9 @@
 spring-context-bootstrap-samples/spring-context-bootstrap-sample-generator/src/main/java/sample/generator/ContextBootstrap.java
 
 HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
 !**/src/test/**
 
