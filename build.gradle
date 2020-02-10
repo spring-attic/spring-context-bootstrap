@@ -14,7 +14,7 @@ plugins {
 }
 
 subprojects {
-	group 'org.springframwork.experimental'
+	group 'org.springframework.experimental'
 	version = '0.0.1-SNAPSHOT'
 
 	apply plugin: 'checkstyle'
