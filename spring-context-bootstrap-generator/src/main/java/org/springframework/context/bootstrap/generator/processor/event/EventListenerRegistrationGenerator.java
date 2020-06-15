@@ -31,7 +31,8 @@ import org.springframework.context.ApplicationListener;
  */
 public class EventListenerRegistrationGenerator {
 
-	private static ClassName METADATA = ClassName.get("org.springframework.context.event", "EventListenerMetadata");
+	private static final ClassName METADATA = ClassName.get("org.springframework.context.event",
+			"EventListenerMetadata");
 
 	private final String beanName;
 

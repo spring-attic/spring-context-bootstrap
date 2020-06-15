@@ -50,7 +50,8 @@ import org.springframework.util.CollectionUtils;
  */
 public class EventListenerProcessor {
 
-	private static ClassName REGISTRAR = ClassName.get("org.springframework.context.event", "EventListenerRegistrar");
+	private static final ClassName REGISTRAR = ClassName.get("org.springframework.context.event",
+			"EventListenerRegistrar");
 
 	private static final Log logger = LogFactory.getLog(EventListenerProcessor.class);
 
