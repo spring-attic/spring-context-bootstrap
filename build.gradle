@@ -9,7 +9,7 @@ buildscript {
 }
 
 plugins {
-	id 'org.springframework.boot' version '2.3.0.BUILD-SNAPSHOT' apply false
+	id 'org.springframework.boot' version '2.4.0-SNAPSHOT' apply false
 	id "io.spring.dependency-management" version "1.0.9.RELEASE"
 }
 
@@ -45,7 +45,7 @@ subprojects {
 
 	dependencyManagement {
 		imports {
-			mavenBom("org.springframework.boot:spring-boot-dependencies:2.3.0.BUILD-SNAPSHOT")
+			mavenBom("org.springframework.boot:spring-boot-dependencies:2.4.0-SNAPSHOT")
 		}
 		dependencies {
 			dependency 'com.squareup:javapoet:1.11.1'
