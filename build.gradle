@@ -48,7 +48,7 @@ subprojects {
 			mavenBom("org.springframework.boot:spring-boot-dependencies:2.4.0-SNAPSHOT")
 		}
 		dependencies {
-			dependency 'com.squareup:javapoet:1.11.1'
+			dependency 'com.squareup:javapoet:1.12.1'
 		}
 	}
 
