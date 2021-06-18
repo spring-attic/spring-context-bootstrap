@@ -45,6 +45,7 @@ public class WebMvcApplication {
 		for (JavaFile javaFile : javaFiles) {
 			javaFile.writeTo(srcDirectory);
 		}
+		context.close();
 	}
 
 	private static void startWithBootstrap(String[] args) {
