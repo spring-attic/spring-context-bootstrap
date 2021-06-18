@@ -31,7 +31,7 @@ subprojects {
 	checkstyle {
 		configFile = rootProject.file('config/checkstyle/checkstyle.xml')
 		configProperties = [ 'checkstyle.config.dir' : rootProject.file('config/checkstyle') ]
-		toolVersion = '8.29'
+		toolVersion = '8.32'
 	}
 
 	compileJava {
