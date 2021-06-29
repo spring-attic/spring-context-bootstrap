@@ -3,9 +3,7 @@ apply plugin: 'java-library'
 dependencies {
 	api 'org.springframework:spring-context'
 	api 'com.squareup:javapoet'
-	testImplementation('org.springframework.boot:spring-boot-starter-test') {
-		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-	}
+	testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
 test {
