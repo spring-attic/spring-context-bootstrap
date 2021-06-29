@@ -29,7 +29,7 @@ import org.springframework.context.support.GenericApplicationContext;
  */
 public class EventListenerRegistrar {
 
-	private static EventListenerFactory DEFAULT_EVENT_LISTENER_FACTORY = new DefaultEventListenerFactory();
+	private static final EventListenerFactory DEFAULT_EVENT_LISTENER_FACTORY = new DefaultEventListenerFactory();
 
 	private final EventExpressionEvaluator evaluator = new EventExpressionEvaluator();
 
