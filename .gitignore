@@ -4,6 +4,7 @@ spring-context-bootstrap-samples/spring-context-bootstrap-sample-generator/src/m
 HELP.md
 .gradle
 build/
+out/
 !gradle/wrapper/gradle-wrapper.jar!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
 !**/src/test/**
