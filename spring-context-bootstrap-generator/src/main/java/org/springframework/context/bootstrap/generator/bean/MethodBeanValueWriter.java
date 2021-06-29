@@ -26,15 +26,15 @@ import org.springframework.context.bootstrap.infrastructure.ExceptionHandler;
 import org.springframework.core.ResolvableType;
 
 /**
- * A factory method-based {@link BeanValueSupplier}.
+ * A factory method-based {@link BeanValueWriter}.
  *
  * @author Stephane Nicoll
  */
-public class MethodBeanValueSupplier extends AbstractBeanValueSupplier {
+public class MethodBeanValueWriter extends AbstractBeanValueWriter {
 
 	private final Method method;
 
-	public MethodBeanValueSupplier(BeanDefinition beanDefinition, Method method) {
+	public MethodBeanValueWriter(BeanDefinition beanDefinition, Method method) {
 		super(beanDefinition);
 		this.method = method;
 	}
@@ -60,7 +60,7 @@ public class MethodBeanValueSupplier extends AbstractBeanValueSupplier {
 	}
 
 	@Override
-	public void handleValueSupplier(CodeBlock.Builder code) {
+	public void writeValueSupplier(CodeBlock.Builder code) {
 		boolean wrapException = hasCheckedException(this.method.getExceptionTypes());
 		if (wrapException) {
 			code.add("$T.wrapException(", ExceptionHandler.class);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,20 @@
 
 package org.springframework.context.bootstrap.generator.bean;
 
-import com.squareup.javapoet.CodeBlock;
+import org.springframework.beans.factory.config.BeanDefinition;
 
 /**
- * Abstract how to write the bean value supplier of a bean definition.
+ * Strategy interface to write the bean value supplier of a {@link BeanDefinition}.
  *
  * @author Stephane Nicoll
  */
-public interface BeanValueSupplier {
+public interface BeanValueWriterSupplier {
 
-	Class<?> getType();
-
-	Class<?> getDeclaringType();
-
-	boolean isAccessibleFrom(String packageName);
-
-	void handleValueSupplier(CodeBlock.Builder code);
+	/**
+	 * Return the {@link BeanValueWriter} to use for the specified {@link BeanDefinition}.
+	 * @param beanDefinition the bean definition to handle
+	 * @return the {@link BeanValueWriter} to use
+	 */
+	BeanValueWriter get(BeanDefinition beanDefinition);
 
 }

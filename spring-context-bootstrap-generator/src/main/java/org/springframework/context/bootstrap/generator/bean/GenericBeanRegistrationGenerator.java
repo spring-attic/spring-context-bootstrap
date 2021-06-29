@@ -39,17 +39,17 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 
 	private final BeanDefinition beanDefinition;
 
-	private final BeanValueSupplier beanValueSupplier;
+	private final BeanValueWriter beanValueWriter;
 
 	public GenericBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition,
-			BeanValueSupplier beanValueSupplier) {
+			BeanValueWriter beanValueWriter) {
 		this.beanName = beanName;
 		this.beanDefinition = beanDefinition;
-		this.beanValueSupplier = beanValueSupplier;
+		this.beanValueWriter = beanValueWriter;
 	}
 
 	@Override
-	public void generateBeanRegistration(MethodSpec.Builder method) {
+	public void writeBeanRegistration(MethodSpec.Builder method) {
 		ResolvableType beanType = this.beanDefinition.getResolvableType();
 		String beanId = getBeanIdentifier(this.beanName, beanType.toClass());
 		String variable = beanId + "BeanDef";
@@ -61,7 +61,7 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 		method.addStatement(targetType.build());
 		CodeBlock.Builder instanceSupplier = CodeBlock.builder();
 		instanceSupplier.add("$L.setInstanceSupplier(", variable);
-		this.beanValueSupplier.handleValueSupplier(instanceSupplier);
+		this.beanValueWriter.writeValueSupplier(instanceSupplier);
 		instanceSupplier.add(")");
 		method.addStatement(instanceSupplier.build());
 		handleMetadata(method, variable);
@@ -69,8 +69,8 @@ public class GenericBeanRegistrationGenerator implements BeanRegistrationGenerat
 	}
 
 	@Override
-	public BeanValueSupplier getBeanValueSupplier() {
-		return this.beanValueSupplier;
+	public BeanValueWriter getBeanValueWriter() {
+		return this.beanValueWriter;
 	}
 
 	private void handleMetadata(MethodSpec.Builder method, String variable) {

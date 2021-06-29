@@ -55,7 +55,7 @@ public class ProtectedBootstrapClass {
 		MethodSpec.Builder method = MethodSpec.methodBuilder(registerBeanMethodName(beanName, type))
 				.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
 				.addParameter(GenericApplicationContext.class, "context");
-		beanRegistrationGenerator.generateBeanRegistration(method);
+		beanRegistrationGenerator.writeBeanRegistration(method);
 		this.methods.add(method.build());
 	}
 

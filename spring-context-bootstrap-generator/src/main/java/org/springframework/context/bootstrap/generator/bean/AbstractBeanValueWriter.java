@@ -35,17 +35,17 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ClassUtils;
 
 /**
- * Base {@link BeanValueSupplier} implementation.
+ * Base {@link BeanValueWriter} implementation.
  *
  * @author Stephane Nicoll
  */
-public abstract class AbstractBeanValueSupplier implements BeanValueSupplier {
+public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 
 	private final BeanDefinition beanDefinition;
 
 	private final Class<?> type;
 
-	public AbstractBeanValueSupplier(BeanDefinition beanDefinition) {
+	public AbstractBeanValueWriter(BeanDefinition beanDefinition) {
 		this.beanDefinition = beanDefinition;
 		this.type = ClassUtils.getUserClass(beanDefinition.getResolvableType().toClass());
 	}

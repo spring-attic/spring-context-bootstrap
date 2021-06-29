@@ -34,21 +34,21 @@ public class SimpleBeanRegistrationGenerator implements BeanRegistrationGenerato
 
 	private final BeanDefinition beanDefinition;
 
-	private final BeanValueSupplier beanValueSupplier;
+	private final BeanValueWriter beanValueWriter;
 
 	public SimpleBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition,
-			BeanValueSupplier beanValueSupplier) {
+			BeanValueWriter beanValueWriter) {
 		this.beanName = beanName;
 		this.beanDefinition = beanDefinition;
-		this.beanValueSupplier = beanValueSupplier;
+		this.beanValueWriter = beanValueWriter;
 	}
 
 	@Override
-	public void generateBeanRegistration(Builder method) {
+	public void writeBeanRegistration(Builder method) {
 		CodeBlock.Builder code = CodeBlock.builder();
 		code.add("context.registerBean($S, $T.class, ", this.beanName,
 				ClassUtils.getUserClass(this.beanDefinition.getResolvableType().toClass()));
-		this.beanValueSupplier.handleValueSupplier(code);
+		this.beanValueWriter.writeValueSupplier(code);
 		handleBeanMetadata(code);
 		code.add(")"); // End of registerBean
 		method.addStatement(code.build());
@@ -64,8 +64,8 @@ public class SimpleBeanRegistrationGenerator implements BeanRegistrationGenerato
 	}
 
 	@Override
-	public BeanValueSupplier getBeanValueSupplier() {
-		return this.beanValueSupplier;
+	public BeanValueWriter getBeanValueWriter() {
+		return this.beanValueWriter;
 	}
 
 }

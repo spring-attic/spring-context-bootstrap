@@ -16,10 +16,6 @@
 
 package org.springframework.context.bootstrap.generator;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,21 +34,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.bootstrap.generator.bean.BeanRegistrationGenerator;
-import org.springframework.context.bootstrap.generator.bean.BeanValueSupplier;
-import org.springframework.context.bootstrap.generator.bean.ConstructorBeanValueSupplier;
+import org.springframework.context.bootstrap.generator.bean.BeanValueWriter;
+import org.springframework.context.bootstrap.generator.bean.BeanValueWriterSupplier;
 import org.springframework.context.bootstrap.generator.bean.GenericBeanRegistrationGenerator;
-import org.springframework.context.bootstrap.generator.bean.MethodBeanValueSupplier;
 import org.springframework.context.bootstrap.generator.bean.SimpleBeanRegistrationGenerator;
 import org.springframework.context.bootstrap.generator.processor.event.EventListenerProcessor;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.ResolvableType;
-import org.springframework.core.annotation.MergedAnnotations;
-import org.springframework.util.ReflectionUtils;
+import org.springframework.core.io.support.SpringFactoriesLoader;
 
 /**
  * A simple experiment to generate a bootstrap class that represents the state of a fully
@@ -64,7 +56,17 @@ public class ContextBootstrapGenerator {
 
 	private static final Log logger = LogFactory.getLog(ContextBootstrapGenerator.class);
 
+	private final List<BeanValueWriterSupplier> beanValueWriterSuppliers;
+
 	private final Map<String, ProtectedBootstrapClass> protectedBootstrapClasses = new HashMap<>();
+
+	public ContextBootstrapGenerator(List<BeanValueWriterSupplier> beanValueWriterSuppliers) {
+		this.beanValueWriterSuppliers = beanValueWriterSuppliers;
+	}
+
+	public ContextBootstrapGenerator(ClassLoader classLoader) {
+		this(SpringFactoriesLoader.loadFactories(BeanValueWriterSupplier.class, classLoader));
+	}
 
 	/**
 	 * Generate the code that is required to restore the state of the specified
@@ -103,20 +105,20 @@ public class ContextBootstrapGenerator {
 				BeanRegistrationGenerator beanRegistrationGenerator = getBeanRegistrationGenerator(beanName,
 						beanDefinition);
 				if (beanRegistrationGenerator != null) {
-					BeanValueSupplier beanValueSupplier = beanRegistrationGenerator.getBeanValueSupplier();
-					if (beanValueSupplier.isAccessibleFrom(packageName)) {
-						beanRegistrationGenerator.generateBeanRegistration(method);
+					BeanValueWriter beanValueWriter = beanRegistrationGenerator.getBeanValueWriter();
+					if (beanValueWriter.isAccessibleFrom(packageName)) {
+						beanRegistrationGenerator.writeBeanRegistration(method);
 					}
 					else {
-						String protectedPackageName = beanValueSupplier.getDeclaringType().getPackage().getName();
+						String protectedPackageName = beanValueWriter.getDeclaringType().getPackage().getName();
 						ProtectedBootstrapClass protectedBootstrapClass = this.protectedBootstrapClasses
 								.computeIfAbsent(protectedPackageName, ProtectedBootstrapClass::new);
-						protectedBootstrapClass.addBeanRegistrationMethod(beanName, beanValueSupplier.getType(),
+						protectedBootstrapClass.addBeanRegistrationMethod(beanName, beanValueWriter.getType(),
 								beanRegistrationGenerator);
 						CodeBlock.Builder code = CodeBlock.builder();
 						ClassName protectedClassName = ClassName.get(protectedPackageName, "ContextBootstrap");
 						code.add("$T.$L(context)", protectedClassName,
-								ProtectedBootstrapClass.registerBeanMethodName(beanName, beanValueSupplier.getType()));
+								ProtectedBootstrapClass.registerBeanMethodName(beanName, beanValueWriter.getType()));
 						method.addStatement(code.build());
 					}
 				}
@@ -129,68 +131,26 @@ public class ContextBootstrapGenerator {
 
 	private BeanRegistrationGenerator getBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition) {
 		ResolvableType beanType = beanDefinition.getResolvableType();
-		BeanValueSupplier beanValueSupplier = getBeanValueSupplier(beanDefinition);
-		if (beanValueSupplier != null) {
+		BeanValueWriter beanValueWriter = getBeanValueSupplier(beanDefinition);
+		if (beanValueWriter != null) {
 			if (beanType.hasGenerics()) {
-				return new GenericBeanRegistrationGenerator(beanName, beanDefinition, beanValueSupplier);
+				return new GenericBeanRegistrationGenerator(beanName, beanDefinition, beanValueWriter);
 			}
 			else {
-				return new SimpleBeanRegistrationGenerator(beanName, beanDefinition, beanValueSupplier);
+				return new SimpleBeanRegistrationGenerator(beanName, beanDefinition, beanValueWriter);
 			}
 		}
 		return null;
 	}
 
-	private BeanValueSupplier getBeanValueSupplier(BeanDefinition beanDefinition) {
-		// Remove CGLIB classes
-		Executable factoryExecutable = resolveBeanFactory(beanDefinition);
-		if (factoryExecutable instanceof Method) {
-			return new MethodBeanValueSupplier(beanDefinition, (Method) factoryExecutable);
-		}
-		else if (factoryExecutable instanceof Constructor) {
-			return new ConstructorBeanValueSupplier(beanDefinition, (Constructor<?>) factoryExecutable);
-		}
-		else {
-			logger.error("Failed to handle bean with definition " + beanDefinition);
-			return null;
-		}
-	}
-
-	private Executable resolveBeanFactory(BeanDefinition beanDefinition) {
-		if (beanDefinition instanceof RootBeanDefinition) {
-			RootBeanDefinition rootBeanDefinition = (RootBeanDefinition) beanDefinition;
-			Method resolvedFactoryMethod = rootBeanDefinition.getResolvedFactoryMethod();
-			if (resolvedFactoryMethod != null) {
-				return resolvedFactoryMethod;
-			}
-			Executable resolvedConstructor = resolveConstructor(rootBeanDefinition);
-			if (resolvedConstructor != null) {
-				return resolvedConstructor;
-			}
-			logger.error("resolvedConstructorOrFactoryMethod required for " + beanDefinition);
-			return getField(beanDefinition, "resolvedConstructorOrFactoryMethod", Executable.class);
-		}
-		return null;
-	}
-
-	private Executable resolveConstructor(RootBeanDefinition beanDefinition) {
-		Class<?> type = beanDefinition.getBeanClass();
-		Constructor<?>[] constructors = type.getDeclaredConstructors();
-		if (constructors.length == 1) {
-			return constructors[0];
-		}
-		for (Constructor<?> constructor : constructors) {
-			if (MergedAnnotations.from(constructor).isPresent(Autowired.class)) {
-				return constructor;
+	private BeanValueWriter getBeanValueSupplier(BeanDefinition beanDefinition) {
+		for (BeanValueWriterSupplier supplier : this.beanValueWriterSuppliers) {
+			BeanValueWriter writer = supplier.get(beanDefinition);
+			if (writer != null) {
+				return writer;
 			}
 		}
 		return null;
-	}
-
-	private <T> T getField(BeanDefinition beanDefinition, String fieldName, Class<T> targetType) {
-		Field field = ReflectionUtils.findField(RootBeanDefinition.class, fieldName);
-		ReflectionUtils.makeAccessible(field);
-		return targetType.cast(ReflectionUtils.getField(field, beanDefinition));
 	}
 
 }

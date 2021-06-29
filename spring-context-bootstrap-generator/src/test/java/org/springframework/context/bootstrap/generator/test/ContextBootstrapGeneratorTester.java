@@ -67,7 +67,7 @@ public class ContextBootstrapGeneratorTester {
 	public ContextBootstrapStructure generate(AbstractApplicationContextRunner<?, ?, ?> runner) {
 		Path srcDirectory = generateSrcDirectory();
 		runner.run((context) -> {
-			List<JavaFile> javaFiles = new ContextBootstrapGenerator().generateBootstrapClass(
+			List<JavaFile> javaFiles = new ContextBootstrapGenerator(context.getClassLoader()).generateBootstrapClass(
 					context.getSourceApplicationContext().getBeanFactory(), this.packageName,
 					this.excludeTypes.toArray(new Class<?>[0]));
 			writeSources(srcDirectory, javaFiles);

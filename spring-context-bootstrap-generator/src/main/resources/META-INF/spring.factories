@@ -1,0 +1,2 @@
+org.springframework.context.bootstrap.generator.bean.BeanValueWriterSupplier=\
+org.springframework.context.bootstrap.generator.bean.DefaultBeanValueWriterSupplier

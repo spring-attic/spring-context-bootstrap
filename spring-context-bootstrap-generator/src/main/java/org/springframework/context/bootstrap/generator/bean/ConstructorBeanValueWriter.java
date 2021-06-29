@@ -27,15 +27,15 @@ import org.springframework.context.bootstrap.infrastructure.ExceptionHandler;
 import org.springframework.core.ResolvableType;
 
 /**
- * A constructor-based {@link BeanValueSupplier}.
+ * A constructor-based {@link BeanValueWriter}.
  *
  * @author Stephane Nicoll
  */
-public class ConstructorBeanValueSupplier extends AbstractBeanValueSupplier {
+public class ConstructorBeanValueWriter extends AbstractBeanValueWriter {
 
 	private final Constructor<?> constructor;
 
-	public ConstructorBeanValueSupplier(BeanDefinition beanDefinition, Constructor<?> constructor) {
+	public ConstructorBeanValueWriter(BeanDefinition beanDefinition, Constructor<?> constructor) {
 		super(beanDefinition);
 		this.constructor = constructor;
 	}
@@ -61,7 +61,7 @@ public class ConstructorBeanValueSupplier extends AbstractBeanValueSupplier {
 	}
 
 	@Override
-	public void handleValueSupplier(CodeBlock.Builder code) {
+	public void writeValueSupplier(CodeBlock.Builder code) {
 		boolean wrapException = hasCheckedException(this.constructor.getExceptionTypes());
 		if (wrapException) {
 			code.add("$T.wrapException(", ExceptionHandler.class);
