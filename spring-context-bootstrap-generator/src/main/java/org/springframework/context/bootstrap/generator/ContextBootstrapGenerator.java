@@ -38,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -50,6 +51,7 @@ import org.springframework.context.bootstrap.generator.bean.SimpleBeanRegistrati
 import org.springframework.context.bootstrap.generator.processor.event.EventListenerProcessor;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -141,17 +143,47 @@ public class ContextBootstrapGenerator {
 
 	private BeanValueSupplier getBeanValueSupplier(BeanDefinition beanDefinition) {
 		// Remove CGLIB classes
+		Executable factoryExecutable = resolveBeanFactory(beanDefinition);
+		if (factoryExecutable instanceof Method) {
+			return new MethodBeanValueSupplier(beanDefinition, (Method) factoryExecutable);
+		}
+		else if (factoryExecutable instanceof Constructor) {
+			return new ConstructorBeanValueSupplier(beanDefinition, (Constructor<?>) factoryExecutable);
+		}
+		else {
+			logger.error("Failed to handle bean with definition " + beanDefinition);
+			return null;
+		}
+	}
+
+	private Executable resolveBeanFactory(BeanDefinition beanDefinition) {
 		if (beanDefinition instanceof RootBeanDefinition) {
-			Executable factoryExecutable = getField(beanDefinition, "resolvedConstructorOrFactoryMethod",
-					Executable.class);
-			if (factoryExecutable instanceof Method) {
-				return new MethodBeanValueSupplier(beanDefinition, (Method) factoryExecutable);
+			RootBeanDefinition rootBeanDefinition = (RootBeanDefinition) beanDefinition;
+			Method resolvedFactoryMethod = rootBeanDefinition.getResolvedFactoryMethod();
+			if (resolvedFactoryMethod != null) {
+				return resolvedFactoryMethod;
 			}
-			else if (factoryExecutable instanceof Constructor) {
-				return new ConstructorBeanValueSupplier(beanDefinition, (Constructor<?>) factoryExecutable);
+			Executable resolvedConstructor = resolveConstructor(rootBeanDefinition);
+			if (resolvedConstructor != null) {
+				return resolvedConstructor;
+			}
+			logger.error("resolvedConstructorOrFactoryMethod required for " + beanDefinition);
+			return getField(beanDefinition, "resolvedConstructorOrFactoryMethod", Executable.class);
+		}
+		return null;
+	}
+
+	private Executable resolveConstructor(RootBeanDefinition beanDefinition) {
+		Class<?> type = beanDefinition.getBeanClass();
+		Constructor<?>[] constructors = type.getDeclaredConstructors();
+		if (constructors.length == 1) {
+			return constructors[0];
+		}
+		for (Constructor<?> constructor : constructors) {
+			if (MergedAnnotations.from(constructor).isPresent(Autowired.class)) {
+				return constructor;
 			}
 		}
-		logger.error("Failed to handle bean with definition " + beanDefinition);
 		return null;
 	}
 
