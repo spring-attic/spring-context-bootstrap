@@ -150,6 +150,7 @@ public class ContextBootstrapGenerator {
 				return writer;
 			}
 		}
+		logger.error("Failed to handle bean with definition " + beanDefinition);
 		return null;
 	}
 
