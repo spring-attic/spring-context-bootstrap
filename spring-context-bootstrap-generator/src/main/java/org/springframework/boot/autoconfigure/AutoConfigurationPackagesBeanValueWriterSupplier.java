@@ -30,7 +30,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.Order;
 
 /**
- * {@link BeanValueWriterSupplier} for {@code AutoConfigurationPackages}.
+ * {@link BeanValueWriterSupplier} for {@link AutoConfigurationPackages}.
  *
  * @author Stephane Nicoll
  */
