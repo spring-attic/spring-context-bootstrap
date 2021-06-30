@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration;
 import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
@@ -103,6 +104,16 @@ class ContextBootstrapGeneratorTests {
 						+ "AutoConfigurationPackages.BasePackages.class, "
 						+ "() -> new AutoConfigurationPackages.BasePackages(new String[] { \"org.springframework.context.bootstrap.generator.sample.autoconfigure\" }), "
 						+ "BeanDefinitionCustomizers.role(2));");
+	}
+
+	@Test
+	void bootstrapClassWithConfigurationProperties() {
+		ContextBootstrapStructure structure = this.generatorTester.generate(this.contextRunner
+				.withConfiguration(AutoConfigurations.of(ConfigurationPropertiesAutoConfiguration.class)));
+		assertThat(structure).contextBootstrap().contains("context.registerBean("
+				+ "\"org.springframework.boot.context.properties.EnableConfigurationPropertiesRegistrar.methodValidationExcludeFilter\", "
+				+ "MethodValidationExcludeFilter.class, "
+				+ "() -> MethodValidationExcludeFilter.byAnnotation(ConfigurationProperties.class), BeanDefinitionCustomizers.role(2));");
 	}
 
 	@Test
