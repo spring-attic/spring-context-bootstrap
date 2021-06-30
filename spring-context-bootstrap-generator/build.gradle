@@ -3,6 +3,9 @@ apply plugin: 'java-library'
 dependencies {
 	api 'org.springframework:spring-context'
 	api 'com.squareup:javapoet'
+
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+    
 	testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 

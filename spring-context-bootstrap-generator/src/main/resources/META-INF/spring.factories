@@ -1,2 +1,3 @@
 org.springframework.context.bootstrap.generator.bean.BeanValueWriterSupplier=\
+org.springframework.boot.autoconfigure.AutoConfigurationPackagesBeanValueWriterSupplier,\
 org.springframework.context.bootstrap.generator.bean.DefaultBeanValueWriterSupplier

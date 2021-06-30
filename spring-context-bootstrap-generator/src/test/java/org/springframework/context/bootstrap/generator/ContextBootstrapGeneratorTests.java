@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.bootstrap.generator.sample.SimpleConfiguration;
+import org.springframework.context.bootstrap.generator.sample.autoconfigure.AutoConfigurationPackagesConfiguration;
 import org.springframework.context.bootstrap.generator.sample.dependency.DependencyConfiguration;
 import org.springframework.context.bootstrap.generator.sample.event.TestEventListener;
 import org.springframework.context.bootstrap.generator.sample.exception.ExceptionConfiguration;
@@ -89,6 +90,19 @@ class ContextBootstrapGeneratorTests {
 		assertThat(structure).contextBootstrap().contains(
 				"context.registerBean(\"projectInfoAutoConfiguration\", ProjectInfoAutoConfiguration.class, () -> new ProjectInfoAutoConfiguration(context.getBean(ProjectInfoProperties.class)));",
 				"context.registerBean(\"spring.info-org.springframework.boot.autoconfigure.info.ProjectInfoProperties\", ProjectInfoProperties.class, ProjectInfoProperties::new);");
+	}
+
+	@Test
+	void bootstrapClassWithAutoConfigurationPackages() {
+		ContextBootstrapStructure structure = this.generatorTester
+				.generate(this.contextRunner.withUserConfiguration(AutoConfigurationPackagesConfiguration.class));
+		assertThat(structure).contextBootstrap()
+				.contains("org.springframework.boot.autoconfigure.ContextBootstrap.registerBasePackages(context)");
+		assertThat(structure).source("org.springframework.boot.autoconfigure", "ContextBootstrap")
+				.contains("context.registerBean(\"org.springframework.boot.autoconfigure.AutoConfigurationPackages\", "
+						+ "AutoConfigurationPackages.BasePackages.class, "
+						+ "() -> new AutoConfigurationPackages.BasePackages(new String[] { \"org.springframework.context.bootstrap.generator.sample.autoconfigure\" }), "
+						+ "BeanDefinitionCustomizers.role(2));");
 	}
 
 	@Test

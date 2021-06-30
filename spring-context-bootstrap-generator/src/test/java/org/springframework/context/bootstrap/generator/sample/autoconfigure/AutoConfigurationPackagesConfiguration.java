@@ -14,23 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.context.bootstrap.generator.bean;
+package org.springframework.context.bootstrap.generator.sample.autoconfigure;
 
-import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
+import org.springframework.context.annotation.Configuration;
 
-/**
- * Strategy interface to write the bean value supplier of a {@link BeanDefinition}.
- *
- * @author Stephane Nicoll
- */
-@FunctionalInterface
-public interface BeanValueWriterSupplier {
-
-	/**
-	 * Return the {@link BeanValueWriter} to use for the specified {@link BeanDefinition}.
-	 * @param beanDefinition the bean definition to handle
-	 * @return the {@link BeanValueWriter} to use, or {@code null}
-	 */
-	BeanValueWriter get(BeanDefinition beanDefinition);
+@Configuration(proxyBeanMethods = false)
+@AutoConfigurationPackage
+public class AutoConfigurationPackagesConfiguration {
 
 }

@@ -50,6 +50,10 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 		this.type = ClassUtils.getUserClass(beanDefinition.getResolvableType().toClass());
 	}
 
+	protected final BeanDefinition getBeanDefinition() {
+		return this.beanDefinition;
+	}
+
 	@Override
 	public final Class<?> getType() {
 		return this.type;
@@ -94,10 +98,10 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 			ValueHolder userValue = this.beanDefinition.getConstructorArgumentValues().getIndexedArgumentValue(i,
 					parameterType.toClass());
 			if (userValue != null) {
-				handleUserValue(code, userValue.getValue(), parameterType);
+				writeParameterValue(code, userValue.getValue(), parameterType);
 			}
 			else {
-				handleDependency(code, parameters[i], parameterType);
+				writeParameterDependency(code, parameters[i], parameterType);
 			}
 			if (i < parameters.length - 1) {
 				code.add(", ");
@@ -106,13 +110,13 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 	}
 
 	// workaround to account for the Spring Boot use case for now.
-	private void handleUserValue(CodeBlock.Builder code, Object value, ResolvableType parameterType) {
+	protected void writeParameterValue(CodeBlock.Builder code, Object value, ResolvableType parameterType) {
 		if (parameterType.isArray()) {
 			code.add("new $T { ", parameterType.toClass());
 			if (value instanceof char[]) {
 				char[] array = (char[]) value;
 				for (int i = 0; i < array.length; i++) {
-					handleUserValue(code, array[i], ResolvableType.forClass(char.class));
+					writeParameterValue(code, array[i], ResolvableType.forClass(char.class));
 					if (i < array.length - 1) {
 						code.add(", ");
 					}
@@ -121,7 +125,7 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 			else if (value instanceof String[]) {
 				String[] array = (String[]) value;
 				for (int i = 0; i < array.length; i++) {
-					handleUserValue(code, array[i], ResolvableType.forClass(String.class));
+					writeParameterValue(code, array[i], ResolvableType.forClass(String.class));
 					if (i < array.length - 1) {
 						code.add(", ");
 					}
@@ -147,7 +151,7 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 				|| valueType == Character.class || valueType == Byte.class || valueType == Boolean.class);
 	}
 
-	private void handleDependency(CodeBlock.Builder code, Parameter parameter, ResolvableType parameterType) {
+	protected void writeParameterDependency(CodeBlock.Builder code, Parameter parameter, ResolvableType parameterType) {
 		Class<?> resolvedClass = parameterType.toClass();
 		if (ObjectProvider.class.isAssignableFrom(resolvedClass)) {
 			code.add("context.getBeanProvider(");
