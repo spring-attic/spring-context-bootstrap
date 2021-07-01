@@ -27,6 +27,7 @@ import com.squareup.javapoet.CodeBlock;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.BeanReference;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
 import org.springframework.context.support.GenericApplicationContext;
@@ -98,7 +99,11 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 			ValueHolder userValue = this.beanDefinition.getConstructorArgumentValues().getIndexedArgumentValue(i,
 					parameterType.toClass());
 			if (userValue != null) {
-				writeParameterValue(code, userValue.getValue(), parameterType);
+				Object value = userValue.getValue();
+				if (value instanceof BeanReference) {
+					writeParameterBeanDependency(code, ((BeanReference) value).getBeanName(), parameterType);
+				}
+				writeParameterValue(code, value, parameterType);
 			}
 			else {
 				writeParameterDependency(code, parameters[i], parameterType);
@@ -171,6 +176,16 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 		}
 		else if (resolvedClass.isAssignableFrom(ConfigurableEnvironment.class)) {
 			code.add("context.getEnvironment()");
+		}
+		else {
+			writeParameterBeanDependency(code, null, parameterType);
+		}
+	}
+
+	private void writeParameterBeanDependency(CodeBlock.Builder code, String beanName, ResolvableType parameterType) {
+		Class<?> resolvedClass = parameterType.toClass();
+		if (beanName != null) {
+			code.add("context.getBean($S, $T.class)", beanName, resolvedClass);
 		}
 		else {
 			code.add("context.getBean($T.class)", resolvedClass);
