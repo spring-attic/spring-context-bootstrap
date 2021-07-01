@@ -60,12 +60,12 @@ public class ContextBootstrapGenerator {
 
 	private final Map<String, ProtectedBootstrapClass> protectedBootstrapClasses = new HashMap<>();
 
-	public ContextBootstrapGenerator(List<BeanValueWriterSupplier> beanValueWriterSuppliers) {
-		this.beanValueWriterSuppliers = beanValueWriterSuppliers;
-	}
-
 	public ContextBootstrapGenerator(ClassLoader classLoader) {
 		this(SpringFactoriesLoader.loadFactories(BeanValueWriterSupplier.class, classLoader));
+	}
+
+	ContextBootstrapGenerator(List<BeanValueWriterSupplier> beanValueWriterSuppliers) {
+		this.beanValueWriterSuppliers = beanValueWriterSuppliers;
 	}
 
 	/**
@@ -96,6 +96,7 @@ public class ContextBootstrapGenerator {
 
 	public MethodSpec generateBootstrapMethod(ConfigurableListableBeanFactory beanFactory, String packageName,
 			BeanDefinitionSelector selector) {
+		ClassLoader classLoader = beanFactory.getBeanClassLoader();
 		MethodSpec.Builder method = MethodSpec.methodBuilder("bootstrap").addModifiers(Modifier.PUBLIC)
 				.addParameter(GenericApplicationContext.class, "context");
 		String[] beanNames = beanFactory.getBeanDefinitionNames();
@@ -103,7 +104,7 @@ public class ContextBootstrapGenerator {
 			BeanDefinition beanDefinition = beanFactory.getMergedBeanDefinition(beanName);
 			if (selector.select(beanName, beanDefinition)) {
 				BeanRegistrationGenerator beanRegistrationGenerator = getBeanRegistrationGenerator(beanName,
-						beanDefinition);
+						beanDefinition, classLoader);
 				if (beanRegistrationGenerator != null) {
 					BeanValueWriter beanValueWriter = beanRegistrationGenerator.getBeanValueWriter();
 					if (beanValueWriter.isAccessibleFrom(packageName)) {
@@ -129,9 +130,10 @@ public class ContextBootstrapGenerator {
 		return method.build();
 	}
 
-	private BeanRegistrationGenerator getBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition) {
+	private BeanRegistrationGenerator getBeanRegistrationGenerator(String beanName, BeanDefinition beanDefinition,
+			ClassLoader classLoader) {
 		ResolvableType beanType = beanDefinition.getResolvableType();
-		BeanValueWriter beanValueWriter = getBeanValueSupplier(beanDefinition);
+		BeanValueWriter beanValueWriter = getBeanValueSupplier(beanDefinition, classLoader);
 		if (beanValueWriter != null) {
 			if (beanType.hasGenerics()) {
 				return new GenericBeanRegistrationGenerator(beanName, beanDefinition, beanValueWriter);
@@ -143,9 +145,9 @@ public class ContextBootstrapGenerator {
 		return null;
 	}
 
-	private BeanValueWriter getBeanValueSupplier(BeanDefinition beanDefinition) {
+	private BeanValueWriter getBeanValueSupplier(BeanDefinition beanDefinition, ClassLoader classLoader) {
 		for (BeanValueWriterSupplier supplier : this.beanValueWriterSuppliers) {
-			BeanValueWriter writer = supplier.get(beanDefinition);
+			BeanValueWriter writer = supplier.get(beanDefinition, classLoader);
 			if (writer != null) {
 				return writer;
 			}

@@ -35,7 +35,7 @@ import org.springframework.core.annotation.Order;
 public class ConfigurationPropertiesBeanValueWriterSupplier implements BeanValueWriterSupplier {
 
 	@Override
-	public BeanValueWriter get(BeanDefinition beanDefinition) {
+	public BeanValueWriter get(BeanDefinition beanDefinition, ClassLoader classLoader) {
 		if (MethodValidationExcludeFilter.class.getName().equals(beanDefinition.getBeanClassName())) {
 			return new MethodValidationExcludeFilterBeanValueWriter(beanDefinition);
 		}
@@ -44,7 +44,7 @@ public class ConfigurationPropertiesBeanValueWriterSupplier implements BeanValue
 
 	private static class MethodValidationExcludeFilterBeanValueWriter extends AbstractBeanValueWriter {
 
-		public MethodValidationExcludeFilterBeanValueWriter(BeanDefinition beanDefinition) {
+		MethodValidationExcludeFilterBeanValueWriter(BeanDefinition beanDefinition) {
 			super(beanDefinition);
 		}
 
@@ -55,7 +55,8 @@ public class ConfigurationPropertiesBeanValueWriterSupplier implements BeanValue
 
 		@Override
 		public void writeValueSupplier(Builder code) {
-			code.add("() -> $T.byAnnotation($T.class)", MethodValidationExcludeFilter.class, ConfigurationProperties.class);
+			code.add("() -> $T.byAnnotation($T.class)", MethodValidationExcludeFilter.class,
+					ConfigurationProperties.class);
 		}
 
 	}

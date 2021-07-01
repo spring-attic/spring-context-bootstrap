@@ -29,8 +29,9 @@ public interface BeanValueWriterSupplier {
 	/**
 	 * Return the {@link BeanValueWriter} to use for the specified {@link BeanDefinition}.
 	 * @param beanDefinition the bean definition to handle
+	 * @param classLoader the class loader to use
 	 * @return the {@link BeanValueWriter} to use, or {@code null}
 	 */
-	BeanValueWriter get(BeanDefinition beanDefinition);
+	BeanValueWriter get(BeanDefinition beanDefinition, ClassLoader classLoader);
 
 }
