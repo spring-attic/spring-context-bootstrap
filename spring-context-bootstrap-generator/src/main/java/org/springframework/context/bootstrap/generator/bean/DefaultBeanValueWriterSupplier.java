@@ -43,7 +43,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Stephane Nicoll
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 5)
-public class DefaultBeanValueWriterSupplier implements BeanValueWriterSupplier {
+class DefaultBeanValueWriterSupplier implements BeanValueWriterSupplier {
 
 	private static final Log logger = LogFactory.getLog(DefaultBeanValueWriterSupplier.class);
 

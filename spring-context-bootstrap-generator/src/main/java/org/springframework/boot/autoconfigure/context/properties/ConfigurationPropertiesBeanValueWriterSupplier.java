@@ -32,7 +32,7 @@ import org.springframework.core.annotation.Order;
  * @author Stephane Nicoll
  */
 @Order(0)
-public class ConfigurationPropertiesBeanValueWriterSupplier implements BeanValueWriterSupplier {
+class ConfigurationPropertiesBeanValueWriterSupplier implements BeanValueWriterSupplier {
 
 	@Override
 	public BeanValueWriter get(BeanDefinition beanDefinition, ClassLoader classLoader) {

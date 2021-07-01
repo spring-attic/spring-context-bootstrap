@@ -35,7 +35,7 @@ import org.springframework.core.annotation.Order;
  * @author Stephane Nicoll
  */
 @Order(0)
-public class AutoConfigurationPackagesBeanValueWriterSupplier implements BeanValueWriterSupplier {
+class AutoConfigurationPackagesBeanValueWriterSupplier implements BeanValueWriterSupplier {
 
 	@Override
 	public BeanValueWriter get(BeanDefinition beanDefinition, ClassLoader classLoader) {
