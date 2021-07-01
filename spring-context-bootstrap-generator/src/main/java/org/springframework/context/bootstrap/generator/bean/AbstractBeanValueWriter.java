@@ -139,7 +139,8 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 			code.add(" }");
 		}
 		else if (value instanceof Character) {
-			code.add("'$L'", value);
+			String result = '\'' + characterLiteralWithoutSingleQuotes((Character) value) + '\'';
+			code.add(result);
 		}
 		else if (isPrimitiveOrWrapper(value)) {
 			code.add("$L", value);
@@ -189,6 +190,31 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 		}
 		else {
 			code.add("context.getBean($T.class)", resolvedClass);
+		}
+	}
+
+	// Copied from com.squareup.javapoet.Util
+	private static String characterLiteralWithoutSingleQuotes(char c) {
+		// see https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.10.6
+		switch (c) {
+		case '\b':
+			return "\\b"; /* \u0008: backspace (BS) */
+		case '\t':
+			return "\\t"; /* \u0009: horizontal tab (HT) */
+		case '\n':
+			return "\\n"; /* \u000a: linefeed (LF) */
+		case '\f':
+			return "\\f"; /* \u000c: form feed (FF) */
+		case '\r':
+			return "\\r"; /* \u000d: carriage return (CR) */
+		case '\"':
+			return "\""; /* \u0022: double quote (") */
+		case '\'':
+			return "\\'"; /* \u0027: single quote (') */
+		case '\\':
+			return "\\\\"; /* \u005c: backslash (\) */
+		default:
+			return java.lang.Character.isISOControl(c) ? String.format("\\u%04x", (int) c) : Character.toString(c);
 		}
 	}
 

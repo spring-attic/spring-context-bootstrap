@@ -36,7 +36,7 @@ class DefaultBeanValueWriterSupplierTests {
 	@Test
 	void beanDefinitionWithFactoryMethodName() {
 		BeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(SampleFactory.class.getName())
-				.setFactoryMethod("createString").addConstructorArgReference("testBean").getBeanDefinition();
+				.setFactoryMethod("createFromBeanReference").addConstructorArgReference("testBean").getBeanDefinition();
 		BeanValueWriter beanValueWriter = getBeanValueWriter(beanDefinition);
 		assertThat(beanValueWriter).isInstanceOf(MethodBeanValueWriter.class);
 	}
