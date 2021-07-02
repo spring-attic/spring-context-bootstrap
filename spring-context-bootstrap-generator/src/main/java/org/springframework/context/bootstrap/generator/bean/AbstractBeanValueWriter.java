@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -167,7 +168,8 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 		else if (Collection.class.isAssignableFrom(resolvedClass)) {
 			code.add("context.getBeanProvider(");
 			TypeHelper.generateResolvableTypeFor(code, parameterType.as(Collection.class).getGeneric(0));
-			code.add(").orderedStream().collect($T.toList())", Collectors.class);
+			String collectors = (Set.class.isAssignableFrom(resolvedClass)) ? "toSet()" : "toList()";
+			code.add(").orderedStream().collect($T.$L)", Collectors.class, collectors);
 		}
 		else if (resolvedClass.isAssignableFrom(GenericApplicationContext.class)) {
 			code.add("context");

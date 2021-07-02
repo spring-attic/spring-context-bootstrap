@@ -17,6 +17,8 @@
 package org.springframework.context.bootstrap.generator.bean;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import com.squareup.javapoet.CodeBlock;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.context.bootstrap.generator.sample.dependency.DependencyConfiguration;
 import org.springframework.context.bootstrap.generator.sample.factory.SampleFactory;
 import org.springframework.util.ReflectionUtils;
 
@@ -52,6 +55,26 @@ class MethodBeanValueWriterTests {
 		Method method = ReflectionUtils.findMethod(SampleFactory.class, "createFromChar", char.class);
 		assertGeneratedCode(beanDefinition, method,
 				(code) -> assertThat(code).endsWith("SampleFactory.createFromChar('\\\\')"));
+	}
+
+	@Test
+	void writeParameterWithList() {
+		BeanDefinition beanDefinition = BeanDefinitionBuilder
+				.rootBeanDefinition(DependencyConfiguration.class.getName()).setFactoryMethod("injectList")
+				.getBeanDefinition();
+		Method method = ReflectionUtils.findMethod(DependencyConfiguration.class, "injectList", List.class);
+		assertGeneratedCode(beanDefinition, method, (code) -> assertThat(code).endsWith(
+				".injectList(context.getBeanProvider(java.lang.String.class).orderedStream().collect(java.util.stream.Collectors.toList()))"));
+	}
+
+	@Test
+	void writeParameterWithSet() {
+		BeanDefinition beanDefinition = BeanDefinitionBuilder
+				.rootBeanDefinition(DependencyConfiguration.class.getName()).setFactoryMethod("injectSet")
+				.getBeanDefinition();
+		Method method = ReflectionUtils.findMethod(DependencyConfiguration.class, "injectSet", Set.class);
+		assertGeneratedCode(beanDefinition, method, (code) -> assertThat(code).endsWith(
+				".injectSet(context.getBeanProvider(java.lang.String.class).orderedStream().collect(java.util.stream.Collectors.toSet()))"));
 	}
 
 	private void assertGeneratedCode(BeanDefinition beanDefinition, Method method, Consumer<String> code) {
