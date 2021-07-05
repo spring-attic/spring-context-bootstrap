@@ -16,6 +16,8 @@
 
 package org.springframework.context.bootstrap.generator.bean;
 
+import java.util.Arrays;
+
 import com.squareup.javapoet.CodeBlock;
 
 import org.springframework.core.ResolvableType;
@@ -28,15 +30,27 @@ import org.springframework.core.ResolvableType;
 abstract class TypeHelper {
 
 	static void generateResolvableTypeFor(CodeBlock.Builder code, ResolvableType target) {
+		generate(code, target, false);
+	}
+
+	private static void generate(CodeBlock.Builder code, ResolvableType target, boolean forceResolvableType) {
+		Class<?> type = target.toClass();
 		if (!target.hasGenerics()) {
-			code.add("$T.class", target.toClass());
+			if (forceResolvableType) {
+				code.add("$T.forClass($T.class)", ResolvableType.class, type);
+			}
+			else {
+				code.add("$T.class", type);
+			}
 		}
 		else {
-			code.add("$T.forClassWithGenerics($T.class, ", ResolvableType.class, target.toClass());
-			for (int i = 0; i < target.getGenerics().length; i++) {
+			code.add("$T.forClassWithGenerics($T.class, ", ResolvableType.class, type);
+			ResolvableType[] generics = target.getGenerics();
+			boolean hasGenericParameter = Arrays.stream(generics).anyMatch(ResolvableType::hasGenerics);
+			for (int i = 0; i < generics.length; i++) {
 				ResolvableType parameter = target.getGeneric(i);
-				generateResolvableTypeFor(code, parameter);
-				if (i < target.getGenerics().length - 1) {
+				generate(code, parameter, hasGenericParameter);
+				if (i < generics.length - 1) {
 					code.add(", ");
 				}
 			}

@@ -278,7 +278,7 @@ class ContextBootstrapGeneratorTests {
 				.generate(this.contextRunner.withUserConfiguration(GenericConfiguration.class));
 		assertThat(structure).contextBootstrap().contains(
 				"RootBeanDefinition stringRepositoryHolderBeanDef = new RootBeanDefinition();",
-				"stringRepositoryHolderBeanDef.setTargetType(ResolvableType.forClassWithGenerics(RepositoryHolder.class, String.class, ResolvableType.forClassWithGenerics(Repository.class, String.class)));",
+				"stringRepositoryHolderBeanDef.setTargetType(ResolvableType.forClassWithGenerics(RepositoryHolder.class, ResolvableType.forClass(String.class), ResolvableType.forClassWithGenerics(Repository.class, String.class)));",
 				"stringRepositoryHolderBeanDef.setInstanceSupplier(() -> context.getBean(GenericConfiguration.class).stringRepositoryHolder(context.getBean(Repository.class)));",
 				"context.registerBeanDefinition(\"stringRepositoryHolder\", stringRepositoryHolderBeanDef);");
 	}
@@ -313,7 +313,7 @@ class ContextBootstrapGeneratorTests {
 				.withUserConfiguration(GenericConfiguration.class, GenericObjectProviderConfiguration.class));
 		assertThat(structure).contextBootstrap().contains(
 				"context.registerBean(\"repositoryId\", String.class, () -> context.getBean(GenericObjectProviderConfiguration.class).repositoryId("
-						+ "context.getBeanProvider(ResolvableType.forClassWithGenerics(RepositoryHolder.class, String.class, ResolvableType.forClassWithGenerics(Repository.class, String.class)))));");
+						+ "context.getBeanProvider(ResolvableType.forClassWithGenerics(RepositoryHolder.class, ResolvableType.forClass(String.class), ResolvableType.forClassWithGenerics(Repository.class, String.class)))));");
 	}
 
 	@Test
