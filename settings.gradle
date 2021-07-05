@@ -18,6 +18,7 @@ rootProject.name = 'spring-context-bootstrap'
 include 'spring-context-bootstrap-generator'
 include 'spring-context-bootstrap-invoker'
 include 'spring-context-bootstrap-samples:spring-context-bootstrap-sample-generator'
+include 'spring-context-bootstrap-samples:spring-context-bootstrap-sample-generator-data-jpa'
 include 'spring-context-bootstrap-samples:spring-context-bootstrap-sample-generator-webflux'
 include 'spring-context-bootstrap-samples:spring-context-bootstrap-sample-generator-webmvc'
 
