@@ -45,9 +45,12 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 
 	private final BeanDefinition beanDefinition;
 
+	private final ClassLoader classLoader;
+
 	private final Class<?> type;
 
-	public AbstractBeanValueWriter(BeanDefinition beanDefinition) {
+	public AbstractBeanValueWriter(BeanDefinition beanDefinition, ClassLoader classLoader) {
+		this.classLoader = classLoader;
 		this.beanDefinition = beanDefinition;
 		this.type = ClassUtils.getUserClass(beanDefinition.getResolvableType().toClass());
 	}
@@ -117,10 +120,11 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 
 	// workaround to account for the Spring Boot use case for now.
 	protected void writeParameterValue(CodeBlock.Builder code, Object value, ResolvableType parameterType) {
+		Object targetValue = convertValueIfNecessary(value, parameterType);
 		if (parameterType.isArray()) {
 			code.add("new $T { ", parameterType.toClass());
-			if (value instanceof char[]) {
-				char[] array = (char[]) value;
+			if (targetValue instanceof char[]) {
+				char[] array = (char[]) targetValue;
 				for (int i = 0; i < array.length; i++) {
 					writeParameterValue(code, array[i], ResolvableType.forClass(char.class));
 					if (i < array.length - 1) {
@@ -128,8 +132,8 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 					}
 				}
 			}
-			else if (value instanceof String[]) {
-				String[] array = (String[]) value;
+			else if (targetValue instanceof String[]) {
+				String[] array = (String[]) targetValue;
 				for (int i = 0; i < array.length; i++) {
 					writeParameterValue(code, array[i], ResolvableType.forClass(String.class));
 					if (i < array.length - 1) {
@@ -139,16 +143,31 @@ public abstract class AbstractBeanValueWriter implements BeanValueWriter {
 			}
 			code.add(" }");
 		}
-		else if (value instanceof Character) {
-			String result = '\'' + characterLiteralWithoutSingleQuotes((Character) value) + '\'';
+		else if (targetValue instanceof Character) {
+			String result = '\'' + characterLiteralWithoutSingleQuotes((Character) targetValue) + '\'';
 			code.add(result);
 		}
-		else if (isPrimitiveOrWrapper(value)) {
-			code.add("$L", value);
+		else if (isPrimitiveOrWrapper(targetValue)) {
+			code.add("$L", targetValue);
 		}
-		else if (value instanceof String) {
-			code.add("$S", value);
+		else if (targetValue instanceof String) {
+			code.add("$S", targetValue);
 		}
+		else if (targetValue instanceof Class) {
+			code.add("$T.class", targetValue);
+		}
+	}
+
+	private Object convertValueIfNecessary(Object value, ResolvableType resolvableType) {
+		if (value instanceof String && Class.class.isAssignableFrom(resolvableType.resolve())) {
+			try {
+				return ClassUtils.forName(((String) value), this.classLoader);
+			}
+			catch (ClassNotFoundException ex) {
+				throw new IllegalStateException("Failed to load " + value, ex);
+			}
+		}
+		return value;
 	}
 
 	private boolean isPrimitiveOrWrapper(Object value) {

@@ -30,4 +30,8 @@ public abstract class SampleFactory {
 		return number + test;
 	}
 
+	public static String create(Class<?> type) {
+		return type.getName();
+	}
+
 }

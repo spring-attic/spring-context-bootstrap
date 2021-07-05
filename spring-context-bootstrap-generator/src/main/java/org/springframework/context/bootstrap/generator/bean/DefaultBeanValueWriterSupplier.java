@@ -66,10 +66,10 @@ class DefaultBeanValueWriterSupplier implements BeanValueWriterSupplier, BeanFac
 		// Remove CGLIB classes
 		Executable factoryExecutable = resolveBeanFactory(beanDefinition, classLoader);
 		if (factoryExecutable instanceof Method) {
-			return new MethodBeanValueWriter(beanDefinition, (Method) factoryExecutable);
+			return new MethodBeanValueWriter(beanDefinition, classLoader, (Method) factoryExecutable);
 		}
 		else if (factoryExecutable instanceof Constructor) {
-			return new ConstructorBeanValueWriter(beanDefinition, (Constructor<?>) factoryExecutable);
+			return new ConstructorBeanValueWriter(beanDefinition, classLoader, (Constructor<?>) factoryExecutable);
 		}
 		return null;
 	}

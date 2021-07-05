@@ -37,15 +37,15 @@ class ConfigurationPropertiesBeanValueWriterSupplier implements BeanValueWriterS
 	@Override
 	public BeanValueWriter get(BeanDefinition beanDefinition, ClassLoader classLoader) {
 		if (MethodValidationExcludeFilter.class.getName().equals(beanDefinition.getBeanClassName())) {
-			return new MethodValidationExcludeFilterBeanValueWriter(beanDefinition);
+			return new MethodValidationExcludeFilterBeanValueWriter(beanDefinition, classLoader);
 		}
 		return null;
 	}
 
 	private static class MethodValidationExcludeFilterBeanValueWriter extends AbstractBeanValueWriter {
 
-		MethodValidationExcludeFilterBeanValueWriter(BeanDefinition beanDefinition) {
-			super(beanDefinition);
+		MethodValidationExcludeFilterBeanValueWriter(BeanDefinition beanDefinition, ClassLoader classLoader) {
+			super(beanDefinition, classLoader);
 		}
 
 		@Override

@@ -77,9 +77,18 @@ class MethodBeanValueWriterTests {
 				".injectSet(context.getBeanProvider(java.lang.String.class).orderedStream().collect(java.util.stream.Collectors.toSet()))"));
 	}
 
+	@Test
+	void writeParameterWithClassAsString() {
+		BeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(SampleFactory.class.getName())
+				.setFactoryMethod("create").addConstructorArgValue("java.lang.String").getBeanDefinition();
+		Method method = ReflectionUtils.findMethod(SampleFactory.class, "create", Class.class);
+		assertGeneratedCode(beanDefinition, method,
+				(code) -> assertThat(code).endsWith("SampleFactory.create(java.lang.String.class)"));
+	}
+
 	private void assertGeneratedCode(BeanDefinition beanDefinition, Method method, Consumer<String> code) {
 		CodeBlock.Builder builder = CodeBlock.builder();
-		new MethodBeanValueWriter(beanDefinition, method).writeValueSupplier(builder);
+		new MethodBeanValueWriter(beanDefinition, getClass().getClassLoader(), method).writeValueSupplier(builder);
 		code.accept(builder.build().toString());
 	}
 

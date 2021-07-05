@@ -40,15 +40,15 @@ class AutoConfigurationPackagesBeanValueWriterSupplier implements BeanValueWrite
 	@Override
 	public BeanValueWriter get(BeanDefinition beanDefinition, ClassLoader classLoader) {
 		if (BasePackages.class.getName().equals(beanDefinition.getBeanClassName())) {
-			return new BasePackagesBeanValueWriter(beanDefinition);
+			return new BasePackagesBeanValueWriter(beanDefinition, classLoader);
 		}
 		return null;
 	}
 
 	private static class BasePackagesBeanValueWriter extends ConstructorBeanValueWriter {
 
-		BasePackagesBeanValueWriter(BeanDefinition beanDefinition) {
-			super(beanDefinition, BasePackages.class.getDeclaredConstructors()[0]);
+		BasePackagesBeanValueWriter(BeanDefinition beanDefinition, ClassLoader classLoader) {
+			super(beanDefinition, classLoader, BasePackages.class.getDeclaredConstructors()[0]);
 		}
 
 		@Override

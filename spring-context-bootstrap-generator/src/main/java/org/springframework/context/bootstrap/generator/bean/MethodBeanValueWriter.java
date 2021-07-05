@@ -34,8 +34,8 @@ public class MethodBeanValueWriter extends AbstractBeanValueWriter {
 
 	private final Method method;
 
-	public MethodBeanValueWriter(BeanDefinition beanDefinition, Method method) {
-		super(beanDefinition);
+	public MethodBeanValueWriter(BeanDefinition beanDefinition, ClassLoader classLoader, Method method) {
+		super(beanDefinition, classLoader);
 		this.method = method;
 	}
 

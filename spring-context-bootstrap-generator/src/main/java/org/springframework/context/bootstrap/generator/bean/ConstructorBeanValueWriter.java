@@ -35,8 +35,9 @@ public class ConstructorBeanValueWriter extends AbstractBeanValueWriter {
 
 	private final Constructor<?> constructor;
 
-	public ConstructorBeanValueWriter(BeanDefinition beanDefinition, Constructor<?> constructor) {
-		super(beanDefinition);
+	public ConstructorBeanValueWriter(BeanDefinition beanDefinition, ClassLoader classLoader,
+			Constructor<?> constructor) {
+		super(beanDefinition, classLoader);
 		this.constructor = constructor;
 	}
 
