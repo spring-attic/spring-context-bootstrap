@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.bootstrap.generator.bean.BeanRegistrationGenerator;
@@ -78,6 +79,8 @@ public class ContextBootstrapGenerator {
 	 */
 	public List<JavaFile> generateBootstrapClass(ConfigurableListableBeanFactory beanFactory, String packageName,
 			Class<?>... excludeTypes) {
+		this.beanValueWriterSuppliers.stream().filter(BeanFactoryAware.class::isInstance)
+				.map(BeanFactoryAware.class::cast).forEach((callback) -> callback.setBeanFactory(beanFactory));
 		DefaultBeanDefinitionSelector selector = new DefaultBeanDefinitionSelector(
 				Arrays.stream(excludeTypes).map(Class::getName).collect(Collectors.toList()));
 		List<JavaFile> bootstrapClasses = new ArrayList<>();

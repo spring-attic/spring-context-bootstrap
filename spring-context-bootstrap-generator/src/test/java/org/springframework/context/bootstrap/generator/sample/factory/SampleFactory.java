@@ -18,12 +18,16 @@ package org.springframework.context.bootstrap.generator.sample.factory;
 
 public abstract class SampleFactory {
 
-	static String createFromBeanReference(String testBean) {
+	public static String create(String testBean) {
 		return testBean;
 	}
 
-	public static String createFromChar(char character) {
+	public static String create(char character) {
 		return new String(new char[] { character });
+	}
+
+	public static String create(Number number, String test) {
+		return number + test;
 	}
 
 }

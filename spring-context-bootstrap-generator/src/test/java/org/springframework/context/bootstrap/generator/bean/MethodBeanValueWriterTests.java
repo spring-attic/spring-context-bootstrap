@@ -42,19 +42,19 @@ class MethodBeanValueWriterTests {
 	@Test
 	void writeParameterWithRuntimeBeanReference() {
 		BeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(SampleFactory.class.getName())
-				.setFactoryMethod("createFromBeanReference").addConstructorArgReference("testBean").getBeanDefinition();
-		Method method = ReflectionUtils.findMethod(SampleFactory.class, "createFromBeanReference", String.class);
-		assertGeneratedCode(beanDefinition, method, (code) -> assertThat(code).endsWith(
-				"SampleFactory.createFromBeanReference(context.getBean(\"testBean\", java.lang.String.class))"));
+				.setFactoryMethod("create").addConstructorArgReference("testBean").getBeanDefinition();
+		Method method = ReflectionUtils.findMethod(SampleFactory.class, "create", String.class);
+		assertGeneratedCode(beanDefinition, method, (code) -> assertThat(code)
+				.endsWith("SampleFactory.create(context.getBean(\"testBean\", java.lang.String.class))"));
 	}
 
 	@Test
 	void writeParameterWithCharacterReferenceEscapeSpecialChar() {
 		BeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(SampleFactory.class.getName())
-				.setFactoryMethod("createFromChar").addConstructorArgValue('\\').getBeanDefinition();
-		Method method = ReflectionUtils.findMethod(SampleFactory.class, "createFromChar", char.class);
+				.setFactoryMethod("create").addConstructorArgValue('\\').getBeanDefinition();
+		Method method = ReflectionUtils.findMethod(SampleFactory.class, "create", char.class);
 		assertGeneratedCode(beanDefinition, method,
-				(code) -> assertThat(code).endsWith("SampleFactory.createFromChar('\\\\')"));
+				(code) -> assertThat(code).endsWith("SampleFactory.create('\\\\')"));
 	}
 
 	@Test

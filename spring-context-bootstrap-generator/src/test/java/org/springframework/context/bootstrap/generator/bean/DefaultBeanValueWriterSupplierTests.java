@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.bootstrap.generator.sample.factory.SampleFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,18 +32,30 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class DefaultBeanValueWriterSupplierTests {
 
-	private final DefaultBeanValueWriterSupplier supplier = new DefaultBeanValueWriterSupplier();
-
 	@Test
 	void beanDefinitionWithFactoryMethodName() {
+		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+		beanFactory.registerSingleton("testBean", "test");
 		BeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(SampleFactory.class.getName())
-				.setFactoryMethod("createFromBeanReference").addConstructorArgReference("testBean").getBeanDefinition();
-		BeanValueWriter beanValueWriter = getBeanValueWriter(beanDefinition);
+				.setFactoryMethod("create").addConstructorArgReference("testBean").getBeanDefinition();
+		DefaultBeanValueWriterSupplier supplier = new DefaultBeanValueWriterSupplier();
+		supplier.setBeanFactory(beanFactory);
+		BeanValueWriter beanValueWriter = supplier.get(beanDefinition, getClass().getClassLoader());
 		assertThat(beanValueWriter).isInstanceOf(MethodBeanValueWriter.class);
 	}
 
-	private BeanValueWriter getBeanValueWriter(BeanDefinition beanDefinition) {
-		return this.supplier.get(beanDefinition, getClass().getClassLoader());
+	@Test
+	void beanDefinitionWithFactoryMethodNameAndAssignableConstructorArg() {
+		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+		beanFactory.registerSingleton("testNumber", 1L);
+		beanFactory.registerSingleton("testBean", "test");
+		BeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(SampleFactory.class.getName())
+				.setFactoryMethod("create").addConstructorArgReference("testNumber")
+				.addConstructorArgReference("testBean").getBeanDefinition();
+		DefaultBeanValueWriterSupplier supplier = new DefaultBeanValueWriterSupplier();
+		supplier.setBeanFactory(beanFactory);
+		BeanValueWriter beanValueWriter = supplier.get(beanDefinition, getClass().getClassLoader());
+		assertThat(beanValueWriter).isInstanceOf(MethodBeanValueWriter.class);
 	}
 
 }
