@@ -20,6 +20,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec.Builder;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.context.bootstrap.infrastructure.BeanDefinitionCustomizers;
 import org.springframework.util.ClassUtils;
 
@@ -57,6 +58,10 @@ public class SimpleBeanRegistrationGenerator implements BeanRegistrationGenerato
 	private void handleBeanMetadata(CodeBlock.Builder code) {
 		if (this.beanDefinition.isPrimary()) {
 			code.add(", $T.primary()", BeanDefinitionCustomizers.class);
+		}
+		if (this.beanDefinition instanceof AbstractBeanDefinition
+				&& ((AbstractBeanDefinition) this.beanDefinition).isSynthetic()) {
+			code.add(", $T.synthetic()", BeanDefinitionCustomizers.class);
 		}
 		if (this.beanDefinition.getRole() != BeanDefinition.ROLE_APPLICATION) {
 			code.add(", $T.role($L)", BeanDefinitionCustomizers.class, this.beanDefinition.getRole());

@@ -17,6 +17,7 @@
 package org.springframework.context.bootstrap.infrastructure;
 
 import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 
 /**
  * Provide {@link BeanDefinitionCustomizer} implementations for common use-cases.
@@ -27,6 +28,14 @@ public abstract class BeanDefinitionCustomizers {
 
 	public static BeanDefinitionCustomizer primary() {
 		return (beanDefinition) -> beanDefinition.setPrimary(true);
+	}
+
+	public static BeanDefinitionCustomizer synthetic() {
+		return (beanDefinition) -> {
+			if (beanDefinition instanceof AbstractBeanDefinition) {
+				((AbstractBeanDefinition) beanDefinition).setSynthetic(true);
+			}
+		};
 	}
 
 	public static BeanDefinitionCustomizer role(int role) {
